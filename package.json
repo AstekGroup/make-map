@@ -1,0 +1,21 @@
+{
+  "name": "make-map",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Carte interactive - Semaine de l'IA pour Tous",
+  "scripts": {
+    "install:map": "cd apps/map-interactive && pnpm install",
+    "dev": "cd apps/map-interactive && pnpm dev",
+    "build": "cd apps/map-interactive && pnpm build",
+    "preview": "cd apps/map-interactive && pnpm preview",
+    "lint": "cd apps/map-interactive && pnpm lint"
+  },
+  "keywords": [
+    "map",
+    "interactive",
+    "react",
+    "maplibre"
+  ],
+  "author": "ILAB Innovation Team",
+  "packageManager": "pnpm@9.0.0"
+}
