@@ -8,7 +8,7 @@ This is an MVP POC for "Semaine de l'IA pour Tous" - an interactive map applicat
 
 **Client**: La Mednum / Semaine de l'IA pour Tous
 **Event dates**: May 18-24, 2026
-**Status**: MVP functional, ready for Airtable API integration
+**Status**: MVP v2 functional with multi-page routing, ready for Airtable API integration
 
 ## Commands
 
@@ -31,20 +31,20 @@ pnpm install && pnpm dev
 
 ### Application Structure
 
-The app follows a **hook-first architecture** where custom hooks manage state and business logic, while components focus on presentation:
+The app follows a **hook-first architecture** with React Router for multi-page navigation:
 
 ```
-App.tsx (root)
-├── useEvents hook           # Central state management
-│   ├── Event loading/filtering
-│   ├── Filter state (search, date, region, type)
-│   └── Statistics computation
-├── MapView component
-│   └── useClusters hook     # Supercluster integration
-│       ├── Cluster computation
-│       └── Map feature rendering
-└── Sidebar component
-    └── Event list & filters
+RouterProvider (root)
+├── HomePage (/)              # Landing page hub
+├── MapPage (/carte)          # Interactive map with sidebar
+│   ├── useEvents hook        # Central state management
+│   ├── MapView component     # MapLibre integration
+│   │   ├── useClusters hook  # Supercluster integration
+│   │   └── DOMTOMInset       # Overseas territories mini-maps
+│   ├── Sidebar component     # Event list & filters
+│   └── EventListView         # List view with pagination (?view=liste)
+├── OnlineEventsPage (/evenements-en-ligne)  # Online events list
+└── EventDetailPage (/evenement/:id)         # Event detail (Meetup style)
 ```
 
 ### Key Custom Hooks
@@ -77,20 +77,26 @@ App.tsx (root)
 
 ### Component Organization
 
-- `components/Map/` - MapLibre integration (MapView, markers, popup)
-- `components/Sidebar/` - Event list, search, filter UI
-- `components/Filters/` - Filter panel (date, region, type)
-- `components/Layout/` - Header and Footer
-- `components/UI/` - Reusable UI components (Button, Badge)
+- `pages/` - Route components (HomePage, MapPage, OnlineEventsPage, EventDetailPage)
+- `components/Map/` - MapLibre integration (MapView, markers, popup, DOMTOMInset)
+- `components/Sidebar/` - Event list, filter UI
+- `components/Filters/` - Filter panel with accordions (date, region, type, postal code)
+- `components/Events/` - Event list view, filters bar, pagination
+- `components/Layout/` - Header and Footer (currently unused)
+- `components/UI/` - Reusable UI components (Button, Badge, Pagination)
 
 ### Type System
 
 All types defined in `src/types/event.ts`:
-- `Event` - Core event model
+- `Event` - Core event model with extended fields (modality, format, targetAudience, capacity, etc.)
 - `EventType` - Event categories (cafe-ia, atelier, conference, jeu, autre)
+- `EventFormat` - Event formats (debat, atelier, prise-en-main, conference, visite, cafe-ia, cine-debat, formation, autre)
+- `EventModality` - presentiel | distanciel
+- `TargetAudience` - Public cible (tout-public, jeunes, seniors, qpv, scolaire, handicap, salaries, adherents)
 - `GeoJSONEvent`, `EventsGeoJSON` - GeoJSON representations
 - `ClusterFeature`, `EventFeature`, `MapFeature` - Supercluster types
 - Type guards: `isCluster(feature)` to distinguish clusters from points
+- Label constants: `EVENT_TYPE_LABELS`, `EVENT_FORMAT_LABELS`, `TARGET_AUDIENCE_LABELS`, `MODALITY_LABELS`
 
 ## Design System
 

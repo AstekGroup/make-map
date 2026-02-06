@@ -1,0 +1,7 @@
+project: make-map
+default_env: prod
+
+envs:
+  prod:
+    provider: local-dev
+    prefix: make-map/prod/

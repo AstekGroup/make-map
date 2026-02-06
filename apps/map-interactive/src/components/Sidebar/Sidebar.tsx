@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Event } from '@/types/event';
 import { EventFilters } from '@/hooks';
-import { SearchBar } from './SearchBar';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
 import { ChevronLeft, ChevronRight, Filter, List, MapIcon } from 'lucide-react';
@@ -58,15 +57,19 @@ export function Sidebar({
   }
 
   return (
-    <div className="absolute left-0 top-0 bottom-0 w-96 max-w-[85vw] bg-surface-beige-light shadow-popup z-10 flex flex-col animate-slide-up">
+    <>
+      {/* Overlay mobile */}
+      <div 
+        className="fixed inset-0 bg-black/30 z-10 sm:hidden"
+        onClick={() => setIsCollapsed(true)}
+      />
+      
+      <div className="absolute left-0 top-0 bottom-0 w-full sm:w-96 sm:max-w-[85vw] bg-surface-beige-light shadow-popup z-20 flex flex-col animate-slide-up">
       {/* Header */}
       <div className="p-4 bg-primary text-white">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="font-rubik font-semibold text-lg">Événements</h2>
-            <p className="text-sm text-white/80">
-              {stats.filtered} sur {stats.total} événements
-            </p>
+            <h2 className="font-rubik font-semibold text-lg">Assister à nos événements</h2>
           </div>
           <button
             onClick={() => setIsCollapsed(true)}
@@ -77,15 +80,8 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Recherche */}
-        <SearchBar
-          value={filters.search}
-          onChange={(value) => onUpdateFilters({ search: value })}
-          placeholder="Ville, organisateur..."
-        />
-
         {/* Onglets */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('list')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -107,7 +103,7 @@ export function Sidebar({
           >
             <Filter className="w-4 h-4" />
             Filtres
-            {(filters.regions.length > 0 || filters.types.length > 0 || filters.dateFilter !== 'all') && (
+            {(filters.search || filters.postalCode || filters.regions.length > 0 || filters.types.length > 0 || filters.dateFilter !== 'all') && (
               <span className="w-2 h-2 bg-accent-coral rounded-full" />
             )}
           </button>
@@ -163,7 +159,7 @@ export function Sidebar({
           <span className="text-text-secondary">
             <span className="font-semibold text-accent-coral">{stats.duringWeek}</span> pendant la Semaine de l'IA
           </span>
-          {(filters.regions.length > 0 || filters.types.length > 0 || filters.dateFilter !== 'all') && (
+          {(filters.search || filters.postalCode || filters.regions.length > 0 || filters.types.length > 0 || filters.dateFilter !== 'all') && (
             <button
               onClick={onResetFilters}
               className="text-accent-magenta hover:underline font-medium"
@@ -174,5 +170,6 @@ export function Sidebar({
         </div>
       </div>
     </div>
+    </>
   );
 }
