@@ -1,4 +1,4 @@
-import { Event, EventType, EventsGeoJSON, GeoJSONEvent } from '@/types/event';
+import { Event, EventType, EventFormat, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality } from '@/types/event';
 
 // Coordonnées des principales villes françaises par région
 const CITIES: Record<string, { name: string; lat: number; lng: number; department: string; postalCode: string }[]> = {
@@ -92,9 +92,64 @@ const CITIES: Record<string, { name: string; lat: number; lng: number; departmen
     { name: 'Porto-Vecchio', lat: 41.5917, lng: 9.2792, department: 'Corse-du-Sud', postalCode: '20137' },
     { name: 'Corte', lat: 42.3056, lng: 9.1492, department: 'Haute-Corse', postalCode: '20250' },
   ],
+  // DOM/TOM
+  'Guadeloupe': [
+    { name: 'Pointe-à-Pitre', lat: 16.2411, lng: -61.5331, department: 'Guadeloupe', postalCode: '97110' },
+    { name: 'Les Abymes', lat: 16.2707, lng: -61.5040, department: 'Guadeloupe', postalCode: '97139' },
+    { name: 'Basse-Terre', lat: 15.9958, lng: -61.7292, department: 'Guadeloupe', postalCode: '97100' },
+  ],
+  'Martinique': [
+    { name: 'Fort-de-France', lat: 14.6161, lng: -61.0588, department: 'Martinique', postalCode: '97200' },
+    { name: 'Le Lamentin', lat: 14.6099, lng: -60.9963, department: 'Martinique', postalCode: '97232' },
+    { name: 'Schoelcher', lat: 14.6167, lng: -61.0833, department: 'Martinique', postalCode: '97233' },
+  ],
+  'Guyane': [
+    { name: 'Cayenne', lat: 4.9372, lng: -52.3260, department: 'Guyane', postalCode: '97300' },
+    { name: 'Kourou', lat: 5.1597, lng: -52.6500, department: 'Guyane', postalCode: '97310' },
+    { name: 'Saint-Laurent-du-Maroni', lat: 5.5000, lng: -54.0333, department: 'Guyane', postalCode: '97320' },
+  ],
+  'La Réunion': [
+    { name: 'Saint-Denis', lat: -20.8823, lng: 55.4504, department: 'La Réunion', postalCode: '97400' },
+    { name: 'Saint-Paul', lat: -21.0100, lng: 55.2708, department: 'La Réunion', postalCode: '97460' },
+    { name: 'Saint-Pierre', lat: -21.3393, lng: 55.4781, department: 'La Réunion', postalCode: '97410' },
+    { name: 'Le Tampon', lat: -21.2500, lng: 55.5167, department: 'La Réunion', postalCode: '97430' },
+  ],
+  'Mayotte': [
+    { name: 'Mamoudzou', lat: -12.7806, lng: 45.2278, department: 'Mayotte', postalCode: '97600' },
+    { name: 'Koungou', lat: -12.7333, lng: 45.2000, department: 'Mayotte', postalCode: '97690' },
+    { name: 'Dzaoudzi', lat: -12.7833, lng: 45.2667, department: 'Mayotte', postalCode: '97615' },
+  ],
 };
 
 const EVENT_TYPES: EventType[] = ['cafe-ia', 'atelier', 'conference', 'jeu', 'autre'];
+
+const EVENT_FORMATS: EventFormat[] = ['debat', 'atelier', 'prise-en-main', 'conference', 'visite', 'cafe-ia', 'cine-debat', 'formation', 'autre'];
+
+const TARGET_AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'qpv', 'scolaire', 'handicap', 'salaries', 'adherents'];
+
+const VENUE_NAMES = [
+  'Salle des fêtes',
+  'Médiathèque',
+  'Centre culturel',
+  'Maison de quartier',
+  'Espace numérique',
+  'Bibliothèque municipale',
+  'Fablab',
+  'Tiers-lieu',
+  'Salle polyvalente',
+  'Maison des associations',
+];
+
+const EVENT_IMAGES = [
+  'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1593376893114-1aed528d80cf?w=800&h=400&fit=crop',
+];
 
 const EVENT_TITLES: Record<EventType, string[]> = {
   'cafe-ia': [
@@ -192,6 +247,32 @@ function addVariation(lat: number, lng: number): { lat: number; lng: number } {
   };
 }
 
+// Générer une durée aléatoire pour un événement
+function generateEndDateTime(date: string, time: string): { endDate: string; endTime: string } {
+  const [hours, minutes] = time.split(':').map(Number);
+  const durationHours = [1, 1.5, 2, 2.5, 3][Math.floor(Math.random() * 5)];
+  
+  let endHours = hours + Math.floor(durationHours);
+  let endMinutes = minutes + (durationHours % 1) * 60;
+  
+  if (endMinutes >= 60) {
+    endHours += 1;
+    endMinutes -= 60;
+  }
+  
+  return {
+    endDate: date,
+    endTime: `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`,
+  };
+}
+
+// Sélectionner plusieurs audiences cibles aléatoirement
+function getRandomTargetAudiences(): TargetAudience[] {
+  const count = 1 + Math.floor(Math.random() * 3);
+  const shuffled = [...TARGET_AUDIENCES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
 // Générer un événement
 function generateEvent(region: string, city: typeof CITIES[string][number], _index: number): Event {
   const type = EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)];
@@ -201,6 +282,22 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
   const isDuringWeek = Math.random() > 0.3; // 70% pendant la semaine IA
   const { date, time } = generateDate(isDuringWeek);
   const coords = addVariation(city.lat, city.lng);
+  const modality: EventModality = Math.random() > 0.15 ? 'presentiel' : 'distanciel'; // 85% présentiel
+  const { endDate, endTime } = generateEndDateTime(date, time);
+  const capacity = [20, 30, 50, 100, 150][Math.floor(Math.random() * 5)];
+  
+  // Correspondance type -> format
+  const typeToFormat: Record<EventType, EventFormat> = {
+    'cafe-ia': 'cafe-ia',
+    'atelier': 'atelier',
+    'conference': 'conference',
+    'jeu': 'autre',
+    'autre': 'autre',
+  };
+  
+  const format = Math.random() > 0.5 
+    ? typeToFormat[type] 
+    : EVENT_FORMATS[Math.floor(Math.random() * EVENT_FORMATS.length)];
   
   return {
     id: generateId(),
@@ -208,7 +305,9 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
     description: `Rejoignez-nous pour cet événement de sensibilisation à l'intelligence artificielle organisé par ${organizer}. Une occasion unique de découvrir, comprendre et expérimenter l'IA dans un cadre convivial et accessible à tous.`,
     date,
     time,
-    address: `${Math.floor(Math.random() * 100) + 1} rue de la République`,
+    endDate,
+    endTime,
+    address: modality === 'presentiel' ? `${Math.floor(Math.random() * 100) + 1} rue de la République` : '',
     city: city.name,
     region,
     department: city.department,
@@ -220,6 +319,18 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
     organizerContact: Math.random() > 0.3 ? `contact@${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
     registrationUrl: Math.random() > 0.4 ? 'https://semaine-ia.fr/inscription' : undefined,
     isDuringWeek,
+    // Nouveaux champs
+    modality,
+    imageUrl: Math.random() > 0.3 ? EVENT_IMAGES[Math.floor(Math.random() * EVENT_IMAGES.length)] : undefined,
+    venueName: modality === 'presentiel' ? VENUE_NAMES[Math.floor(Math.random() * VENUE_NAMES.length)] : undefined,
+    accessibilityInfo: Math.random() > 0.6 ? 'Accessible PMR' : undefined,
+    videoConferenceUrl: modality === 'distanciel' ? 'https://meet.semaine-ia.fr/event' : undefined,
+    format,
+    targetAudience: getRandomTargetAudiences(),
+    contactEmail: Math.random() > 0.3 ? `contact@${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
+    organizerWebsite: Math.random() > 0.5 ? `https://${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
+    capacity,
+    registeredCount: Math.floor(Math.random() * capacity * 0.8),
   };
 }
 

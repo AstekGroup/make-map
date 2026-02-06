@@ -37,8 +37,23 @@ Créer une application React standalone pour afficher 1500 événements de la Se
 ### Phase 6 : UX et Polish
 - [x] 6.1 Animations et transitions
 - [x] 6.2 Mode responsive (mobile)
-- [x] 6.3 Header avec branding
-- [x] 6.4 Footer avec liens
+- [x] 6.3 Header avec branding (retiré dans Phase 6bis)
+- [x] 6.4 Footer avec liens (retiré dans Phase 6bis)
+
+### Phase 6bis : Évolutions UI/UX (Janvier 2026)
+- [x] 6b.1 Enrichissement modèle Event (modalité, format, public cible, capacité, etc.)
+- [x] 6b.2 Ajout encarts DOM/TOM sur la carte
+- [x] 6b.3 Retrait Header et Footer (mode plein écran)
+- [x] 6b.4 Réorganisation filtres avec accordéons
+- [x] 6b.5 Ajout filtre code postal
+- [x] 6b.6 Pictos dans filtre type d'événement
+- [x] 6b.7 Amélioration popup événement (style tag, lien détail)
+- [x] 6b.8 Responsive amélioré (sidebar mobile)
+- [x] 6b.9 Ajout React Router et système de navigation
+- [x] 6b.10 Création page d'accueil (carrefour)
+- [x] 6b.11 Création page détail événement (style Meetup)
+- [x] 6b.12 Création page liste événements en ligne
+- [x] 6b.13 Ajout vue liste avec pagination sur la cartographie
 
 ### Phase 7 : Intégration API
 - [ ] 7.1 Connection API Airtable
@@ -53,5 +68,14 @@ Créer une application React standalone pour afficher 1500 événements de la Se
 
 ## Progression
 - **Date début** : 9 janvier 2026
-- **Statut** : MVP fonctionnel ✅
+- **Statut** : MVP v2 fonctionnel ✅
+- **Dernière mise à jour** : 23 janvier 2026
+- **Nouvelles fonctionnalités** : 
+  - Multi-pages avec React Router
+  - Page d'accueil (hub)
+  - Page détail événement
+  - Page événements en ligne
+  - Vue liste avec pagination
+  - Encarts DOM/TOM
+  - Filtres améliorés (accordéons, code postal)
 - **Prochaine étape** : Intégration API Airtable

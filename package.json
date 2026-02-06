@@ -8,7 +8,8 @@
     "dev": "cd apps/map-interactive && pnpm dev",
     "build": "cd apps/map-interactive && pnpm build",
     "preview": "cd apps/map-interactive && pnpm preview",
-    "lint": "cd apps/map-interactive && pnpm lint"
+    "lint": "cd apps/map-interactive && pnpm lint",
+    "deploy:scw": "./scripts/deploy.sh"
   },
   "keywords": [
     "map",

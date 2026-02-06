@@ -1,5 +1,5 @@
-import { useRef, useState, useCallback, useMemo } from 'react';
-import Map, { Marker, Popup, NavigationControl, GeolocateControl, ScaleControl } from 'react-map-gl/maplibre';
+import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
+import Map, { Marker, Popup, ScaleControl } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -8,8 +8,9 @@ import { EventsGeoJSON, Event, isCluster, MapFeature } from '@/types/event';
 import { ClusterMarker } from './ClusterMarker';
 import { EventMarker } from './EventMarker';
 import { EventPopup } from './EventPopup';
-import { MapStyleSelector, MAP_STYLES, type MapStyleId } from './MapStyleSelector';
-import { ZoomIn, ZoomOut, Home } from 'lucide-react';
+import { MAP_STYLES } from './MapStyleSelector';
+import { DOMTOMInset } from './DOMTOMInset';
+import { ZoomIn, ZoomOut, Home, Navigation } from 'lucide-react';
 
 interface MapViewProps {
   geojson: EventsGeoJSON;
@@ -17,6 +18,8 @@ interface MapViewProps {
   onSelectEvent: (event: Event | null) => void;
   hoveredEvent: Event | null;
   onHoverEvent: (event: Event | null) => void;
+  onViewEventDetails?: (eventId: string) => void;
+  onMapFlyToReady?: (flyTo: (lng: number, lat: number, zoom?: number) => void) => void;
 }
 
 export function MapView({
@@ -25,11 +28,11 @@ export function MapView({
   onSelectEvent,
   hoveredEvent,
   onHoverEvent,
+  onViewEventDetails,
+  onMapFlyToReady,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
-  const { viewport, onMove, flyTo, resetView, zoomIn, zoomOut } = useMapViewport();
-  const [currentStyleId, setCurrentStyleId] = useState<MapStyleId>('bright');
-  const [isStyleSelectorOpen, setIsStyleSelectorOpen] = useState(false);
+  const { viewport, onMove } = useMapViewport();
   const [bounds, setBounds] = useState<{
     west: number;
     south: number;
@@ -37,9 +40,31 @@ export function MapView({
     north: number;
   } | null>(null);
 
+  // Use Liberty (3D) style by default (no style selector anymore)
+  const currentStyleUrl = MAP_STYLES.find(s => s.id === 'liberty')?.url || MAP_STYLES[0].url;
+
+  // Expose flyTo to parent via mapRef for smoother transitions
+  const smoothFlyTo = useCallback((lng: number, lat: number, zoom?: number) => {
+    const map = mapRef.current;
+    if (map) {
+      map.flyTo({
+        center: [lng, lat],
+        zoom: zoom ?? map.getZoom(),
+        duration: 1200,
+        essential: true,
+      });
+    }
+  }, []);
+
+  // Expose flyTo to parent
+  useEffect(() => {
+    if (onMapFlyToReady) {
+      onMapFlyToReady(smoothFlyTo);
+    }
+  }, [onMapFlyToReady, smoothFlyTo]);
+
   // Initialisation de la carte
   const onMapLoad = useCallback(() => {
-    // Mise à jour des bounds initiale
     onMoveEnd();
   }, []);
 
@@ -70,27 +95,29 @@ export function MapView({
   const handleClusterClick = useCallback(
     (clusterId: number, longitude: number, latitude: number) => {
       const expansionZoom = getClusterExpansionZoom(clusterId);
-      flyTo(longitude, latitude, expansionZoom);
+      smoothFlyTo(longitude, latitude, expansionZoom);
     },
-    [getClusterExpansionZoom, flyTo]
+    [getClusterExpansionZoom, smoothFlyTo]
   );
 
   // Gestionnaire de clic sur événement
   const handleEventClick = useCallback(
     (feature: MapFeature) => {
       if (!isCluster(feature)) {
-        onSelectEvent(feature.properties);
-        flyTo(
+        const event = feature.properties;
+        onSelectEvent(event);
+        // Smooth fly to the event, offset slightly to center popup in view
+        smoothFlyTo(
           feature.geometry.coordinates[0],
           feature.geometry.coordinates[1],
           Math.max(viewport.zoom, 12)
         );
       }
     },
-    [onSelectEvent, flyTo, viewport.zoom]
+    [onSelectEvent, smoothFlyTo, viewport.zoom]
   );
 
-  // Position du popup
+  // Position du popup with offset to avoid being hidden by top controls
   const popupCoordinates = useMemo(() => {
     if (!selectedEvent) return null;
     return {
@@ -98,12 +125,6 @@ export function MapView({
       latitude: selectedEvent.latitude,
     };
   }, [selectedEvent]);
-
-  // URL du style de carte actuel
-  const currentStyleUrl = useMemo(() => {
-    const style = MAP_STYLES.find((s) => s.id === currentStyleId);
-    return style?.url || MAP_STYLES[0].url;
-  }, [currentStyleId]);
 
   return (
     <div className="relative w-full h-full">
@@ -120,8 +141,6 @@ export function MapView({
         attributionControl={false}
       >
         {/* Contrôles natifs */}
-        <NavigationControl position="bottom-right" showCompass={false} />
-        <GeolocateControl position="bottom-right" />
         <ScaleControl position="bottom-left" />
 
         {/* Clusters et marqueurs */}
@@ -175,48 +194,92 @@ export function MapView({
             onClose={() => onSelectEvent(null)}
             closeButton={false}
             closeOnClick={false}
-            offset={20}
+            offset={25}
+            maxWidth="340px"
           >
-            <EventPopup event={selectedEvent} onClose={() => onSelectEvent(null)} />
+            <EventPopup 
+              event={selectedEvent} 
+              onClose={() => onSelectEvent(null)} 
+              onViewDetails={onViewEventDetails}
+            />
           </Popup>
         )}
       </Map>
 
-      {/* Contrôles personnalisés */}
+      {/* Contrôles personnalisés - sans sélecteur de fond de carte */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
-          onClick={zoomIn}
+          onClick={() => {
+            const map = mapRef.current;
+            if (map) {
+              const currentZoom = map.getZoom();
+              map.flyTo({ zoom: Math.min(currentZoom + 1, 18), duration: 300 });
+            }
+          }}
           className="w-10 h-10 bg-white rounded-lg shadow-card flex items-center justify-center text-primary hover:bg-surface-beige transition-colors"
           aria-label="Zoomer"
         >
           <ZoomIn className="w-5 h-5" />
         </button>
         <button
-          onClick={zoomOut}
+          onClick={() => {
+            const map = mapRef.current;
+            if (map) {
+              const currentZoom = map.getZoom();
+              map.flyTo({ zoom: Math.max(currentZoom - 1, 3), duration: 300 });
+            }
+          }}
           className="w-10 h-10 bg-white rounded-lg shadow-card flex items-center justify-center text-primary hover:bg-surface-beige transition-colors"
           aria-label="Dézoomer"
         >
           <ZoomOut className="w-5 h-5" />
         </button>
         <button
-          onClick={resetView}
+          onClick={() => {
+            const map = mapRef.current;
+            if (map) {
+              map.flyTo({
+                center: [2.2137, 46.2276],
+                zoom: 5.5,
+                duration: 1200,
+              });
+            }
+          }}
           className="w-10 h-10 bg-white rounded-lg shadow-card flex items-center justify-center text-primary hover:bg-surface-beige transition-colors"
           aria-label="Recentrer la carte"
         >
           <Home className="w-5 h-5" />
         </button>
-        <MapStyleSelector
-          currentStyle={currentStyleId}
-          onStyleChange={setCurrentStyleId}
-          isOpen={isStyleSelectorOpen}
-          onToggle={() => setIsStyleSelectorOpen(!isStyleSelectorOpen)}
-        />
+        <button
+          onClick={() => {
+            if ('geolocation' in navigator) {
+              navigator.geolocation.getCurrentPosition((position) => {
+                smoothFlyTo(position.coords.longitude, position.coords.latitude, 14);
+              });
+            }
+          }}
+          className="w-10 h-10 bg-white rounded-lg shadow-card flex items-center justify-center text-primary hover:bg-surface-beige transition-colors"
+          aria-label="Me géolocaliser"
+        >
+          <Navigation className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Indicateur de zoom */}
-      <div className="absolute bottom-20 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-card text-sm font-medium text-primary">
-        Zoom: {viewport.zoom.toFixed(1)}
-      </div>
+      {/* Mini-cartes DOM/TOM + France métropolitaine */}
+      <DOMTOMInset
+        geojson={geojson}
+        mapStyleUrl={currentStyleUrl}
+        onEventClick={(eventId) => {
+          const event = geojson.features.find(f => f.properties.id === eventId);
+          if (event) {
+            onSelectEvent(event.properties);
+            smoothFlyTo(event.properties.longitude, event.properties.latitude, 14);
+          }
+        }}
+        onTerritoryClick={(territory) => {
+          smoothFlyTo(territory.center.lng, territory.center.lat, territory.zoom);
+        }}
+      />
     </div>
   );
 }

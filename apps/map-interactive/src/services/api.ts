@@ -1,4 +1,4 @@
-import { Event, EventType } from '@/types/event';
+import { Event, EventType, EventFormat, TargetAudience, EventModality } from '@/types/event';
 
 // Configuration API Airtable
 // À remplir avec les vraies valeurs
@@ -15,6 +15,8 @@ interface AirtableRecord {
     Description: string;
     Date: string;
     Time: string;
+    EndDate?: string;
+    EndTime?: string;
     Address: string;
     City: string;
     Region: string;
@@ -27,6 +29,18 @@ interface AirtableRecord {
     OrganizerContact?: string;
     RegistrationUrl?: string;
     IsDuringWeek: boolean;
+    // Nouveaux champs
+    Modality: string;
+    ImageUrl?: string;
+    VenueName?: string;
+    AccessibilityInfo?: string;
+    VideoConferenceUrl?: string;
+    Format: string;
+    TargetAudience?: string[];
+    ContactEmail?: string;
+    OrganizerWebsite?: string;
+    Capacity?: number;
+    RegisteredCount?: number;
   };
 }
 
@@ -46,6 +60,8 @@ function transformAirtableRecord(record: AirtableRecord): Event {
     description: fields.Description,
     date: fields.Date,
     time: fields.Time,
+    endDate: fields.EndDate,
+    endTime: fields.EndTime,
     address: fields.Address,
     city: fields.City,
     region: fields.Region,
@@ -58,6 +74,18 @@ function transformAirtableRecord(record: AirtableRecord): Event {
     organizerContact: fields.OrganizerContact,
     registrationUrl: fields.RegistrationUrl,
     isDuringWeek: fields.IsDuringWeek,
+    // Nouveaux champs
+    modality: (fields.Modality as EventModality) || 'presentiel',
+    imageUrl: fields.ImageUrl,
+    venueName: fields.VenueName,
+    accessibilityInfo: fields.AccessibilityInfo,
+    videoConferenceUrl: fields.VideoConferenceUrl,
+    format: (fields.Format as EventFormat) || 'autre',
+    targetAudience: (fields.TargetAudience as TargetAudience[]) || ['tout-public'],
+    contactEmail: fields.ContactEmail,
+    organizerWebsite: fields.OrganizerWebsite,
+    capacity: fields.Capacity,
+    registeredCount: fields.RegisteredCount,
   };
 }
 

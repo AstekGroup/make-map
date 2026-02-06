@@ -7,6 +7,8 @@ export interface EventFilters {
   dateFilter: 'all' | 'during-week' | 'other';
   regions: string[];
   types: EventType[];
+  postalCode: string;
+  modality: 'all' | 'presentiel' | 'distanciel';
 }
 
 const initialFilters: EventFilters = {
@@ -14,6 +16,8 @@ const initialFilters: EventFilters = {
   dateFilter: 'all',
   regions: [],
   types: [],
+  postalCode: '',
+  modality: 'all',
 };
 
 export function useEvents() {
@@ -49,11 +53,16 @@ export function useEvents() {
         const searchLower = filters.search.toLowerCase();
         const matchesSearch = 
           event.title.toLowerCase().includes(searchLower) ||
+          event.description.toLowerCase().includes(searchLower) ||
           event.city.toLowerCase().includes(searchLower) ||
           event.organizer.toLowerCase().includes(searchLower) ||
-          event.region.toLowerCase().includes(searchLower);
+          event.region.toLowerCase().includes(searchLower) ||
+          (event.venueName && event.venueName.toLowerCase().includes(searchLower));
         if (!matchesSearch) return false;
       }
+
+      // Filtre modalité
+      if (filters.modality !== 'all' && event.modality !== filters.modality) return false;
 
       // Filtre date
       if (filters.dateFilter === 'during-week' && !event.isDuringWeek) return false;
@@ -64,6 +73,12 @@ export function useEvents() {
 
       // Filtre types
       if (filters.types.length > 0 && !filters.types.includes(event.type)) return false;
+
+      // Filtre code postal
+      if (filters.postalCode) {
+        const postalCodeFilter = filters.postalCode.trim();
+        if (!event.postalCode.startsWith(postalCodeFilter)) return false;
+      }
 
       return true;
     });

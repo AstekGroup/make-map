@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { Event } from '@/types/event';
-import { Badge } from '@/components/UI';
+import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS } from '@/types/event';
+import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 
 interface EventCardProps {
@@ -25,6 +25,9 @@ function EventCardComponent({
     month: 'short',
   });
 
+  const Icon = TYPE_ICONS[event.type];
+  const color = EVENT_TYPE_COLORS[event.type];
+
   return (
     <div
       className={`p-4 rounded-card bg-white border-2 cursor-pointer card-hover transition-all duration-200 ${
@@ -42,13 +45,25 @@ function EventCardComponent({
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
     >
       <div className="flex items-start gap-3">
-        {/* Indicateur type */}
-        <div className="flex-shrink-0 mt-0.5">
-          <Badge type={event.type} size="sm" />
+        {/* Indicateur type avec picto */}
+        <div
+          className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: color }}
+        >
+          <Icon className="w-4 h-4 text-white" />
         </div>
 
         {/* Contenu */}
         <div className="flex-1 min-w-0">
+          {/* Tag catégorie */}
+          <span
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold mb-1"
+            style={{ backgroundColor: '#ffeed0', color: '#003082' }}
+          >
+            <Icon className="w-2.5 h-2.5" />
+            {EVENT_TYPE_LABELS[event.type]}
+          </span>
+
           <h4 className="font-rubik font-semibold text-text-primary text-sm leading-tight line-clamp-2">
             {event.title}
           </h4>

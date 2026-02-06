@@ -8,9 +8,10 @@ interface EventMarkerProps {
   onClick: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  size?: 'sm' | 'md';
 }
 
-const TYPE_ICONS: Record<EventType, typeof MapPin> = {
+export const TYPE_ICONS: Record<EventType, typeof MapPin> = {
   'cafe-ia': Coffee,
   'atelier': Wrench,
   'conference': Mic2,
@@ -24,15 +25,19 @@ function EventMarkerComponent({
   onClick,
   onMouseEnter,
   onMouseLeave,
+  size = 'md',
 }: EventMarkerProps) {
   const Icon = TYPE_ICONS[type];
   const color = EVENT_TYPE_COLORS[type];
+  const isSmall = size === 'sm';
   
   return (
     <div
       className={`event-marker animate-scale-in ${isSelected ? 'ring-2 ring-white scale-125' : ''}`}
       style={{
         backgroundColor: color,
+        width: isSmall ? '16px' : '32px',
+        height: isSmall ? '16px' : '32px',
       }}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
@@ -42,7 +47,7 @@ function EventMarkerComponent({
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
       aria-label="Voir les détails de l'événement"
     >
-      <Icon className="w-4 h-4 text-white" />
+      <Icon className={isSmall ? 'w-2 h-2 text-white' : 'w-4 h-4 text-white'} />
     </div>
   );
 }
