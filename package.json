@@ -1,22 +1,31 @@
 {
   "name": "make-map",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Carte interactive - Semaine de l'IA pour Tous",
   "scripts": {
+    "dev": "turbo run dev --filter=@make-map/frontend --filter=@make-map/backend",
+    "dev:all": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "front:dev": "turbo run dev --filter=@make-map/frontend",
+    "back:dev": "turbo run dev --filter=@make-map/backend",
+    "map:dev": "turbo run dev --filter=@make-map/map-interactive",
     "install:map": "cd apps/map-interactive && pnpm install",
-    "dev": "cd apps/map-interactive && pnpm dev",
-    "build": "cd apps/map-interactive && pnpm build",
-    "preview": "cd apps/map-interactive && pnpm preview",
-    "lint": "cd apps/map-interactive && pnpm lint",
-    "deploy:scw": "./scripts/deploy.sh"
+    "deploy:scw": "./scripts/deploy.sh",
+    "deploy:v2": "./scripts/deploy-v2.sh"
   },
   "keywords": [
     "map",
     "interactive",
     "react",
-    "maplibre"
+    "maplibre",
+    "nestjs",
+    "airtable"
   ],
   "author": "ILAB Innovation Team",
-  "packageManager": "pnpm@9.0.0"
+  "packageManager": "pnpm@9.0.0",
+  "devDependencies": {
+    "turbo": "^2.8.7"
+  }
 }

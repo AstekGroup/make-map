@@ -1,0 +1,36 @@
+# Dependencies
+**/node_modules
+
+# Build output
+**/dist
+**/.turbo
+
+# Environment files (secrets)
+**/.env
+**/.env.local
+**/.env.*.local
+deploy/.env.prod
+
+# IDE
+.vscode
+.cursor
+.idea
+**/.DS_Store
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!shared/types/package.json
+docs/
+resources/
+
+# Tests
+**/coverage
+**/*.spec.ts
+**/test/
+
+# Map interactive (version statique, pas dans le build Docker)
+apps/map-interactive/

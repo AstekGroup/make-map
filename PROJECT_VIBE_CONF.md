@@ -16,11 +16,15 @@ Application React standalone pour afficher 1500 événements sur une carte de Fr
 - **Source site** : https://semaine-ia.fr
 
 ## Stack technique
-- **Framework** : React 18 + Vite
+- **Monorepo** : pnpm workspaces + TurboRepo
+- **Frontend** : React 18 + Vite
+- **Backend** : NestJS 11
 - **Map** : MapLibre GL JS + react-map-gl
 - **Clustering** : Supercluster
 - **Styling** : Tailwind CSS
-- **Data source** : API Airtable existante
+- **Data source** : API Airtable (via backend proxy)
+- **Géocodage** : api-adresse.data.gouv.fr (côté serveur)
+- **Types partagés** : @make-map/types
 
 ## Requirements
 - **DEVPLAN** : Oui (POC)

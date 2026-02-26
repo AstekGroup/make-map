@@ -56,9 +56,9 @@ Créer une application React standalone pour afficher 1500 événements de la Se
 - [x] 6b.13 Ajout vue liste avec pagination sur la cartographie
 
 ### Phase 7 : Intégration API
-- [ ] 7.1 Connection API Airtable
-- [ ] 7.2 Transformation données
-- [ ] 7.3 Gestion erreurs et loading
+- [x] 7.1 Connection API Airtable
+- [x] 7.2 Transformation données
+- [x] 7.3 Gestion erreurs et loading
 
 ### Phase 8 : Tests et Déploiement
 - [x] 8.1 Tests de performance
@@ -66,16 +66,45 @@ Créer une application React standalone pour afficher 1500 événements de la Se
 - [ ] 8.3 Build production
 - [ ] 8.4 Déploiement
 
+### Phase 9 : Architecture Monorepo (Février 2026)
+- [x] 9.1 Setup monorepo TurboRepo + pnpm workspaces
+- [x] 9.2 Package partagé @make-map/types
+- [x] 9.3 Backend NestJS (apps/backend)
+  - [x] Module Airtable (fetch paginé, mapping, transformation)
+  - [x] Module Geocoding (api-adresse.data.gouv.fr, cache mémoire serveur)
+  - [x] Module Events (REST API, cache TTL 5min)
+  - [x] Configuration CORS, @nestjs/config, health check
+- [x] 9.4 Nouveau frontend (apps/frontend)
+  - [x] API simplifiée (appels HTTP vers le backend)
+  - [x] Types partagés via @make-map/types
+  - [x] Suppression code Airtable/géocodage côté client
+- [x] 9.5 Conservation de map-interactive (version statique inchangée)
+
+### Phase 10 : Déploiement Scaleway (Février 2026)
+- [x] 10.1 Dockerfile backend (multi-stage build, port 8080, health check)
+- [x] 10.2 Dockerfile frontend (multi-stage build, Nginx SPA fallback, gzip)
+- [x] 10.3 Docker Compose production (Caddy + frontend + backend)
+- [x] 10.4 Caddy reverse proxy (HTTPS automatique Let's Encrypt)
+- [x] 10.5 Adaptation main.ts pour production (CORS configurable, listen 0.0.0.0)
+- [x] 10.6 Script de déploiement deploy-v2.sh (rsync + docker compose)
+- [x] 10.7 Documentation déploiement (deploy/README.md, .env.prod.example)
+- [ ] 10.8 Provisionnement instance Scaleway DEV1-S
+- [ ] 10.9 Premier déploiement en production
+
 ## Progression
 - **Date début** : 9 janvier 2026
-- **Statut** : MVP v2 fonctionnel ✅
-- **Dernière mise à jour** : 23 janvier 2026
+- **Statut** : Prêt pour déploiement Scaleway ✅
+- **Dernière mise à jour** : 12 février 2026
 - **Nouvelles fonctionnalités** : 
-  - Multi-pages avec React Router
-  - Page d'accueil (hub)
-  - Page détail événement
-  - Page événements en ligne
-  - Vue liste avec pagination
-  - Encarts DOM/TOM
-  - Filtres améliorés (accordéons, code postal)
-- **Prochaine étape** : Intégration API Airtable
+  - Monorepo TurboRepo (apps/frontend, apps/backend, apps/map-interactive, shared/types)
+  - Backend NestJS : proxy sécurisé pour Airtable (token côté serveur)
+  - API REST : GET /api/events, GET /api/events/:id, GET /api/health
+  - Géocodage côté serveur avec cache mémoire
+  - Cache TTL 5 minutes pour les événements
+  - Types partagés entre frontend et backend
+  - Version statique (map-interactive) préservée
+  - Docker Compose production (Caddy + Nginx + NestJS)
+  - HTTPS automatique via Caddy/Let's Encrypt
+  - Script de déploiement automatisé (rsync + docker compose)
+  - Cible : instance Scaleway DEV1-S (~11 EUR/mois, 24/7)
+- **Prochaine étape** : Provisionner l'instance Scaleway et déployer

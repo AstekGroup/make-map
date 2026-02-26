@@ -1,0 +1,26 @@
+# Configuration Caddy - Reverse Proxy
+#
+# Pour utiliser avec un domaine (HTTPS automatique) :
+#   Remplacer ":80" par le domaine (ex: map.semaine-ia.fr)
+#   Caddy obtiendra automatiquement un certificat Let's Encrypt.
+#
+# Pour utiliser avec une IP (HTTP seulement) :
+#   Garder ":80" comme ci-dessous.
+
+:80 {
+    # API backend
+    handle /api/* {
+        reverse_proxy backend:8080
+    }
+
+    # Frontend (fichiers statiques React)
+    handle {
+        reverse_proxy frontend:3080
+    }
+
+    # Logs
+    log {
+        output stdout
+        format console
+    }
+}

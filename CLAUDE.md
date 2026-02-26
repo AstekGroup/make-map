@@ -4,156 +4,158 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an MVP POC for "Semaine de l'IA pour Tous" - an interactive map application displaying 1500+ AI awareness events across France. The project is a standalone React app with advanced clustering and filtering capabilities.
+This is an MVP POC for "Semaine de l'IA pour Tous" - an interactive map application displaying 1500+ AI awareness events across France. The project is a **monorepo** with a React frontend, a NestJS backend, and shared types.
 
 **Client**: La Mednum / Semaine de l'IA pour Tous
 **Event dates**: May 18-24, 2026
-**Status**: MVP v2 functional with multi-page routing, ready for Airtable API integration
+**Status**: Monorepo with backend API proxy for Airtable
+
+## Monorepo Structure
+
+```
+make-map/
+├── apps/
+│   ├── frontend/           # React + Vite (consumes backend API)
+│   ├── backend/            # NestJS (Airtable proxy + geocoding)
+│   └── map-interactive/    # Original standalone version (unchanged)
+├── shared/
+│   └── types/              # @make-map/types (shared TypeScript types)
+├── turbo.json              # TurboRepo configuration
+└── pnpm-workspace.yaml     # pnpm workspaces
+```
 
 ## Commands
 
-Commands can be run from the **root directory** (recommended) or from `apps/map-interactive`:
-
 ```bash
 # From root (recommended)
-pnpm run install:map  # Install dependencies
-pnpm dev             # Start dev server (localhost:5173)
-pnpm build           # TypeScript compile + Vite build
-pnpm preview         # Preview production build
-pnpm lint            # ESLint check
-
-# Or from apps/map-interactive
-cd apps/map-interactive
-pnpm install && pnpm dev
+pnpm install              # Install all workspace dependencies
+pnpm dev                  # Start frontend + backend (via turbo)
+pnpm front:dev            # Start frontend only (localhost:5173)
+pnpm back:dev             # Start backend only (localhost:3000)
+pnpm map:dev              # Start original map-interactive
+pnpm build                # Build all packages
+pnpm lint                 # Lint all packages
 ```
 
 ## Architecture Overview
 
-### Application Structure
+### Backend (apps/backend) - NestJS
 
-The app follows a **hook-first architecture** with React Router for multi-page navigation:
+```
+src/
+├── airtable/               # Airtable API integration
+│   ├── airtable.service.ts     # Fetch paginated + transform records
+│   ├── airtable.types.ts       # AirtableRecord interface (French field names)
+│   └── airtable-mapping.util.ts # Format/Audience/Modality mapping
+├── geocoding/              # Address geocoding
+│   └── geocoding.service.ts    # api-adresse.data.gouv.fr + in-memory cache
+├── events/                 # REST API
+│   ├── events.controller.ts    # GET /api/events, GET /api/events/:id
+│   └── events.service.ts       # Orchestration + TTL cache (5min)
+├── app.module.ts           # Root module (ConfigModule, EventsModule)
+├── app.controller.ts       # GET /api/health
+└── main.ts                 # Bootstrap + CORS config
+```
+
+**Key features**:
+- Airtable token stays server-side (env var `AIRTABLE_API_KEY`)
+- Geocoding via api-adresse.data.gouv.fr with permanent in-memory cache
+- 5-minute TTL cache for Airtable data
+- CORS configured for localhost dev ports
+- `?devMode=true` query param to bypass moderation filter
+
+### Frontend (apps/frontend) - React + Vite
+
+Same UI as `map-interactive` but with simplified API layer:
+- `services/api.ts` only makes HTTP calls to backend
+- No Airtable/geocoding code client-side
+- Types imported from `@make-map/types` (via re-export in `types/event.ts`)
+
+### Shared Types (@make-map/types)
+
+All shared types in `shared/types/src/event.ts`:
+- `Event` - Core event model
+- `EventType`, `EventFormat`, `TargetAudience`, `EventModality` - Enums
+- `GeoJSONEvent`, `EventsGeoJSON` - GeoJSON representations
+- `ClusterFeature`, `MapFeature` - Supercluster types
+- Label constants: `EVENT_TYPE_LABELS`, `EVENT_FORMAT_LABELS`, etc.
+- `REGIONS` - All French regions including DOM-TOM
+
+### Frontend Application Structure
+
+The frontend follows a **hook-first architecture** with React Router:
 
 ```
 RouterProvider (root)
 ├── HomePage (/)              # Landing page hub
 ├── MapPage (/carte)          # Interactive map with sidebar
-│   ├── useEvents hook        # Central state management
+│   ├── useEvents hook        # Calls backend API, manages filters
 │   ├── MapView component     # MapLibre integration
 │   │   ├── useClusters hook  # Supercluster integration
 │   │   └── DOMTOMInset       # Overseas territories mini-maps
 │   ├── Sidebar component     # Event list & filters
-│   └── EventListView         # List view with pagination (?view=liste)
-├── OnlineEventsPage (/evenements-en-ligne)  # Online events list
-└── EventDetailPage (/evenement/:id)         # Event detail (Meetup style)
+│   └── EventListView         # List view with pagination
+├── EventsListPage (/evenements)  # Events list page
+└── EventDetailPage (/evenement/:id)  # Event detail
 ```
-
-### Key Custom Hooks
-
-**`useEvents`** (`src/hooks/useEvents.ts`)
-- Central state management for the entire app
-- Loads events (currently mocked, ready for API)
-- Manages all filter state (search, date, regions, types)
-- Computes filtered events and statistics
-- Returns events as both array and GeoJSON
-
-**`useClusters`** (`src/hooks/useClusters.ts`)
-- Wraps Supercluster library for performance
-- Takes GeoJSON, bounds, and zoom level
-- Returns clusters for current viewport
-- Provides cluster expansion and child retrieval
-- Memoized for optimal performance
-
-**`useMapViewport`** (`src/hooks/useMapViewport.ts`)
-- Manages map viewport state (zoom, center, bounds)
-- Syncs with react-map-gl
 
 ### Data Flow
 
-1. **useEvents** loads/filters events → outputs GeoJSON
-2. **MapView** receives GeoJSON → passes to **useClusters**
-3. **useClusters** + viewport → computes visible clusters/points
-4. Markers render clusters (ClusterMarker) or events (EventMarker)
-5. User interaction (click/hover) → updates App state → syncs sidebar
-
-### Component Organization
-
-- `pages/` - Route components (HomePage, MapPage, OnlineEventsPage, EventDetailPage)
-- `components/Map/` - MapLibre integration (MapView, markers, popup, DOMTOMInset)
-- `components/Sidebar/` - Event list, filter UI
-- `components/Filters/` - Filter panel with accordions (date, region, type, postal code)
-- `components/Events/` - Event list view, filters bar, pagination
-- `components/Layout/` - Header and Footer (currently unused)
-- `components/UI/` - Reusable UI components (Button, Badge, Pagination)
-
-### Type System
-
-All types defined in `src/types/event.ts`:
-- `Event` - Core event model with extended fields (modality, format, targetAudience, capacity, etc.)
-- `EventType` - Event categories (cafe-ia, atelier, conference, jeu, autre)
-- `EventFormat` - Event formats (debat, atelier, prise-en-main, conference, visite, cafe-ia, cine-debat, formation, autre)
-- `EventModality` - presentiel | distanciel
-- `TargetAudience` - Public cible (tout-public, jeunes, seniors, qpv, scolaire, handicap, salaries, adherents)
-- `GeoJSONEvent`, `EventsGeoJSON` - GeoJSON representations
-- `ClusterFeature`, `EventFeature`, `MapFeature` - Supercluster types
-- Type guards: `isCluster(feature)` to distinguish clusters from points
-- Label constants: `EVENT_TYPE_LABELS`, `EVENT_FORMAT_LABELS`, `TARGET_AUDIENCE_LABELS`, `MODALITY_LABELS`
+```
+Frontend                    Backend                    External
+--------                    -------                    --------
+useEvents() ──GET /api/events──> EventsController
+                                 └─> EventsService (cache check)
+                                      └─> AirtableService
+                                           ├─> Airtable API (fetch)
+                                           ├─> mapping (transform)
+                                           └─> GeocodingService
+                                                └─> api-adresse.data.gouv.fr
+```
 
 ## Design System
 
-The app uses a custom design system matching semaine-ia.fr branding, configured in `tailwind.config.ts`:
+Custom design system matching semaine-ia.fr branding (in `tailwind.config.ts`):
 
-**Colors** (semantic tokens):
-- `primary` (#003081) - Main brand blue, headers, text
-- `accent-coral` (#f56476) - CTAs, clusters, highlights
-- `accent-magenta` (#cc3366) - Links, hover states
-- `surface-beige` (#ffeed1) - Background
+**Colors**: `primary` (#003081), `accent-coral` (#f56476), `accent-magenta` (#cc3366), `surface-beige` (#ffeed1)
+**Typography**: Rubik (titles), Palanquin (body)
 
-**Typography**:
-- Titles: `font-rubik` (Rubik from Google Fonts)
-- Body: `font-palanquin` (Palanquin from Google Fonts)
+## Environment Variables
 
-**Conventions**:
-- Use semantic color classes: `bg-primary`, `text-accent-coral`
-- Custom animations available: `animate-fade-in`, `animate-slide-up`, `animate-scale-in`
-- Shadow utilities: `shadow-card`, `shadow-popup`, `shadow-cluster`
+**Backend** (`apps/backend/.env`):
+```
+AIRTABLE_API_KEY=...   # Airtable Personal Access Token
+AIRTABLE_BASE_ID=...   # Airtable Base ID (app...)
+AIRTABLE_TABLE_ID=...  # Airtable Table ID (tbl...)
+PORT=3000
+```
+
+**Frontend** (`apps/frontend/.env`):
+```
+VITE_API_URL=http://localhost:3000  # Backend URL
+VITE_MAPTILER_KEY=...              # MapTiler API key
+```
 
 ## Path Aliases
 
-TypeScript and Vite configured with `@/` alias pointing to `src/`:
-
+Frontend uses `@/` alias pointing to `src/`:
 ```typescript
 import { useEvents } from '@/hooks';
-import { Event } from '@/types/event';
+import { Event } from '@/types/event';  // Re-exports from @make-map/types
 ```
-
-## API Integration (Future)
-
-The app is ready for Airtable API integration:
-
-1. Set environment variables in `.env`:
-   ```
-   VITE_AIRTABLE_API_KEY=your_key
-   VITE_AIRTABLE_BASE_ID=your_base_id
-   ```
-
-2. `src/services/api.ts` handles API calls with automatic fallback to mock data
-
-3. Expected Airtable field mapping defined in `AirtableRecord` interface
-
-4. Update `useEvents` hook to call `fetchEvents()` from API service instead of importing `MOCK_EVENTS`
 
 ## Performance Considerations
 
 - **Clustering**: Supercluster handles 500k+ points efficiently
-- **Memoization**: Heavy computations (filtering, GeoJSON conversion, clustering) are memoized
-- **Viewport culling**: Only render visible clusters/events
+- **Server-side geocoding**: Geocoded once, cached in memory permanently
+- **Backend cache**: 5-minute TTL avoids repeated Airtable calls
+- **Memoization**: Frontend uses `useMemo` and `useCallback` extensively
 - **WebGL rendering**: MapLibre uses GPU acceleration
-- When adding features, ensure computed values use `useMemo` and callbacks use `useCallback`
 
 ## Important Notes
 
 - This is a POC/MVP - focus on functionality over perfection
-- Mock data in `src/data/mockEvents.ts` contains 1500 generated events
-- The app is responsive (desktop + mobile) with conditional UI
+- `apps/map-interactive` is the original standalone version - DO NOT MODIFY
 - All French text/labels should remain in French
 - Event dates reference May 2026 event week
+- Backend is READ-ONLY on Airtable (only GET operations)

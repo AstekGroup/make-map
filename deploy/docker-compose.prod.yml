@@ -1,0 +1,63 @@
+services:
+  # ============================================================
+  # Caddy - Reverse proxy HTTPS automatique (Let's Encrypt)
+  # ============================================================
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+
+  # ============================================================
+  # Frontend - Nginx servant les fichiers statiques React
+  # ============================================================
+  frontend:
+    build:
+      context: ../
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        VITE_API_URL: ""
+        VITE_MAPTILER_KEY: ${VITE_MAPTILER_KEY}
+    restart: unless-stopped
+    expose:
+      - "3080"
+
+  # ============================================================
+  # Backend - NestJS API (Airtable proxy + Geocoding)
+  # ============================================================
+  backend:
+    build:
+      context: ../
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - AIRTABLE_API_KEY=${AIRTABLE_API_KEY}
+      - AIRTABLE_BASE_ID=${AIRTABLE_BASE_ID}
+      - AIRTABLE_TABLE_ID=${AIRTABLE_TABLE_ID}
+      - PORT=8080
+      - NODE_ENV=production
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  caddy_data:
+  caddy_config:
