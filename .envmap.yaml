@@ -5,3 +5,19 @@ envs:
   prod:
     provider: local-dev
     prefix: make-map/prod/
+    keys:
+      # Backend (Airtable)
+      - AIRTABLE_API_KEY
+      - AIRTABLE_BASE_ID
+      - AIRTABLE_TABLE_ID
+      # Frontend
+      - VITE_API_URL
+      - VITE_MAPTILER_KEY
+      # Scaleway
+      - SCW_ACCESS_KEY
+      - SCW_SECRET_KEY
+      - SCW_PROJECT_ID
+      - SCW_INSTANCE_IP
+      # Production
+      - DOMAIN
+      - CORS_ORIGIN
