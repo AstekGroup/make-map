@@ -27,6 +27,7 @@ pnpm-debug.log*
 .cache/
 .parcel-cache/
 .vite/
+.turbo/
 
 # Test coverage
 coverage/
