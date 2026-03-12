@@ -13,7 +13,9 @@
     "map:dev": "turbo run dev --filter=@make-map/map-interactive",
     "install:map": "cd apps/map-interactive && pnpm install",
     "deploy:scw": "./scripts/deploy.sh",
-    "deploy:v2": "./scripts/deploy-v2.sh"
+    "deploy:v2": "./scripts/deploy-v2.sh",
+    "test": "turbo run test --filter=@make-map/backend --filter=@make-map/frontend",
+    "prepare": "husky"
   },
   "keywords": [
     "map",
@@ -26,6 +28,7 @@
   "author": "ILAB Innovation Team",
   "packageManager": "pnpm@9.0.0",
   "devDependencies": {
+    "husky": "^9.1.7",
     "turbo": "^2.8.7"
   }
 }
