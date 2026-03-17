@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Event } from '@/types/event';
 import { EventFilters } from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
 import { ChevronLeft, ChevronRight, Filter, List, MapIcon } from 'lucide-react';
+import { MapBounds } from '@/components/Map';
 
 interface SidebarProps {
   events: Event[];
@@ -21,6 +22,7 @@ interface SidebarProps {
     filtered: number;
     duringWeek: number;
   };
+  mapBounds?: MapBounds | null;
 }
 
 export function Sidebar({
@@ -35,12 +37,36 @@ export function Sidebar({
   hoveredEvent,
   onHoverEvent,
   stats,
+  mapBounds,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
 
+  // Trier : événements visibles sur la carte en premier
+  const sortedEvents = useMemo(() => {
+    if (!mapBounds) return events;
+    const inBounds = (e: Event) =>
+      e.longitude >= mapBounds.west &&
+      e.longitude <= mapBounds.east &&
+      e.latitude >= mapBounds.south &&
+      e.latitude <= mapBounds.north;
+    const visible = events.filter(inBounds);
+    const hidden = events.filter(e => !inBounds(e));
+    return [...visible, ...hidden];
+  }, [events, mapBounds]);
+
+  const visibleCount = useMemo(() => {
+    if (!mapBounds) return null;
+    return sortedEvents.filter(e =>
+      e.longitude >= mapBounds.west &&
+      e.longitude <= mapBounds.east &&
+      e.latitude >= mapBounds.south &&
+      e.latitude <= mapBounds.north
+    ).length;
+  }, [sortedEvents, mapBounds]);
+
   // Afficher les 50 premiers événements (pour performances)
-  const displayedEvents = events.slice(0, 50);
+  const displayedEvents = sortedEvents.slice(0, 50);
 
   if (isCollapsed) {
     return (
@@ -122,6 +148,11 @@ export function Sidebar({
               </div>
             ) : (
               <>
+                {visibleCount !== null && visibleCount > 0 && (
+                  <p className="text-xs text-text-secondary font-medium px-1 pb-1">
+                    <span className="text-accent-coral font-semibold">{visibleCount}</span> visible{visibleCount > 1 ? 's' : ''} sur la carte · {events.length} au total
+                  </p>
+                )}
                 {displayedEvents.map((event) => (
                   <EventCard
                     key={event.id}

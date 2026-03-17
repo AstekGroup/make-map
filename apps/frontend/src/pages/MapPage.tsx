@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Event, EventType } from '@/types/event';
 import { useEvents } from '@/hooks';
-import { MapView } from '@/components/Map';
+import { MapView, MapBounds } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchOverlay } from '@/components/Map/SearchOverlay';
 import { Loader2, List, Home, Filter, Wifi } from 'lucide-react';
@@ -30,6 +30,7 @@ export function MapPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
   const [mobileShowSidebar, setMobileShowSidebar] = useState(false);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const mapFlyToRef = useRef<((lng: number, lat: number, zoom?: number) => void) | null>(null);
 
   const handleViewDetails = (eventId: string) => {
@@ -138,6 +139,7 @@ export function MapPage() {
         onHoverEvent={setHoveredEvent}
         onViewEventDetails={handleViewDetails}
         onMapFlyToReady={(flyToFn) => { mapFlyToRef.current = flyToFn; }}
+        onBoundsChange={setMapBounds}
       />
 
       {/* Sidebar - visible sur desktop, toggle sur mobile */}
@@ -154,6 +156,7 @@ export function MapPage() {
           hoveredEvent={hoveredEvent}
           onHoverEvent={setHoveredEvent}
           stats={stats}
+          mapBounds={mapBounds}
         />
       </div>
 
@@ -175,6 +178,7 @@ export function MapPage() {
             hoveredEvent={hoveredEvent}
             onHoverEvent={setHoveredEvent}
             stats={stats}
+            mapBounds={mapBounds}
           />
         </div>
       )}

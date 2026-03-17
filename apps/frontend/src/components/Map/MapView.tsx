@@ -12,6 +12,13 @@ import { MAP_STYLES } from './MapStyleSelector';
 import { DOMTOMInset } from './DOMTOMInset';
 import { ZoomIn, ZoomOut, Home } from 'lucide-react';
 
+export interface MapBounds {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}
+
 interface MapViewProps {
   geojson: EventsGeoJSON;
   selectedEvent: Event | null;
@@ -20,6 +27,7 @@ interface MapViewProps {
   onHoverEvent: (event: Event | null) => void;
   onViewEventDetails?: (eventId: string) => void;
   onMapFlyToReady?: (flyTo: (lng: number, lat: number, zoom?: number) => void) => void;
+  onBoundsChange?: (bounds: MapBounds) => void;
 }
 
 export function MapView({
@@ -30,6 +38,7 @@ export function MapView({
   onHoverEvent,
   onViewEventDetails,
   onMapFlyToReady,
+  onBoundsChange,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
   const { viewport, onMove } = useMapViewport();
@@ -75,15 +84,17 @@ export function MapView({
     if (map) {
       const b = map.getBounds();
       if (b) {
-        setBounds({
+        const newBounds = {
           west: b.getWest(),
           south: b.getSouth(),
           east: b.getEast(),
           north: b.getNorth(),
-        });
+        };
+        setBounds(newBounds);
+        onBoundsChange?.(newBounds);
       }
     }
-  }, []);
+  }, [onBoundsChange]);
 
   // Clustering
   const { clusters, getClusterExpansionZoom } = useClusters(
