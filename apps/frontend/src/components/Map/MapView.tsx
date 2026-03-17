@@ -134,7 +134,7 @@ export function MapView({
     if (!selectedEvent || !mapRef.current) return 'bottom';
     const map = mapRef.current;
     const pos = map.project([selectedEvent.longitude, selectedEvent.latitude]);
-    const { clientHeight, clientWidth } = map.getContainer();
+    const { clientWidth } = map.getContainer();
     const isMobile = clientWidth < 640;
 
     const topThreshold = isMobile ? 250 : 300;   // search bar + popup height
