@@ -2,6 +2,37 @@ import { useMemo, useCallback } from 'react';
 import Supercluster from 'supercluster';
 import { EventsGeoJSON, GeoJSONEvent, ClusterFeature, MapFeature } from '@/types/event';
 
+// Décale légèrement les événements ayant exactement les mêmes coordonnées
+// pour qu'ils restent cliquables individuellement au zoom max.
+function jitterDuplicateCoordinates(features: GeoJSONEvent[]): GeoJSONEvent[] {
+  const groups = new Map<string, GeoJSONEvent[]>();
+  for (const f of features) {
+    const key = `${f.geometry.coordinates[0]},${f.geometry.coordinates[1]}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(f);
+  }
+  const result: GeoJSONEvent[] = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      result.push(group[0]);
+    } else {
+      const radius = 0.00008; // ~8m — imperceptible sur la carte
+      group.forEach((f, i) => {
+        const angle = (2 * Math.PI * i) / group.length;
+        const [lng, lat] = f.geometry.coordinates;
+        result.push({
+          ...f,
+          geometry: {
+            ...f.geometry,
+            coordinates: [lng + radius * Math.cos(angle), lat + radius * Math.sin(angle)],
+          },
+        });
+      });
+    }
+  }
+  return result;
+}
+
 interface BoundingBox {
   west: number;
   south: number;
@@ -32,7 +63,7 @@ export function useClusters(
     });
 
     if (geojson.features.length > 0) {
-      index.load(geojson.features);
+      index.load(jitterDuplicateCoordinates(geojson.features));
     }
 
     return index;

@@ -141,7 +141,7 @@ export function MapView({
     const rightThreshold = isMobile ? 60 : 330;  // DOMTOMInset width
 
     if (pos.y < topThreshold) return 'top';
-    if (pos.x > clientWidth - rightThreshold) return 'left';
+    if (pos.x > clientWidth - rightThreshold) return 'right';
     return 'bottom';
   }, [selectedEvent, viewport]);
 
