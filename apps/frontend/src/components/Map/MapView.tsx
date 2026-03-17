@@ -97,11 +97,19 @@ export function MapView({
   }, [onBoundsChange]);
 
   // Clustering
-  const { clusters, getClusterExpansionZoom } = useClusters(
+  const { clusters, duplicateIds, getClusterExpansionZoom } = useClusters(
     geojson,
     bounds,
     viewport.zoom
   );
+
+  // Formater une date ISO en "20 Mai"
+  const formatDateShort = (dateStr: string): string => {
+    if (!dateStr) return '';
+    const [, month, day] = dateStr.split('-');
+    const months = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+    return `${parseInt(day)} ${months[parseInt(month) - 1]}`;
+  };
 
   // Gestionnaire de clic sur cluster
   const handleClusterClick = useCallback(
@@ -219,6 +227,7 @@ export function MapView({
                 onClick={() => handleEventClick(feature)}
                 onMouseEnter={() => onHoverEvent(event)}
                 onMouseLeave={() => onHoverEvent(null)}
+                dateLabel={duplicateIds.has(event.id) ? formatDateShort(event.date) : undefined}
               />
             </Marker>
           );
