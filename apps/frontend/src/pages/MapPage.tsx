@@ -103,21 +103,23 @@ export function MapPage() {
       />
 
       {/* Navigation Controls - masqués sur mobile (accessibles via bouton Filtres en bas) */}
-      <div className="absolute top-4 left-4 z-20 hidden sm:flex items-center gap-2">
-        <Link
-          to="/"
-          className="bg-white shadow-popup rounded-xl p-2.5 hover:bg-surface-beige transition-all border border-primary/5 group"
-          title="Retour à l'accueil"
-        >
-          <Home className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-        </Link>
-        <button
-          onClick={() => navigate('/evenements')}
-          className="bg-white shadow-popup rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold text-primary hover:bg-surface-beige transition-all border border-primary/5 group"
-        >
-          <List className="w-4 h-4 group-hover:scale-110 transition-transform text-accent-magenta" />
-          Voir la liste
-        </button>
+      <div className="absolute top-4 left-4 z-20 hidden sm:flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Link
+            to="/"
+            className="bg-white shadow-popup rounded-xl p-2.5 hover:bg-surface-beige transition-all border border-primary/5 group"
+            title="Retour à l'accueil"
+          >
+            <Home className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+          </Link>
+          <button
+            onClick={() => navigate('/evenements')}
+            className="bg-white shadow-popup rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold text-primary hover:bg-surface-beige transition-all border border-primary/5 group"
+          >
+            <List className="w-4 h-4 group-hover:scale-110 transition-transform text-accent-magenta" />
+            Voir la liste
+          </button>
+        </div>
         <button
           onClick={() => navigate('/evenements?modality=distanciel')}
           className="bg-white shadow-popup rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold text-primary hover:bg-surface-beige transition-all border border-primary/5 group"
