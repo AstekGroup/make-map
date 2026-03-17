@@ -42,31 +42,19 @@ export function Sidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
 
-  // Trier : événements visibles sur la carte en premier
-  const sortedEvents = useMemo(() => {
-    if (!mapBounds) return events;
+  // Séparer les événements visibles sur la carte des autres
+  const { visibleEvents, hiddenEvents } = useMemo(() => {
+    if (!mapBounds) return { visibleEvents: null, hiddenEvents: events };
     const inBounds = (e: Event) =>
       e.longitude >= mapBounds.west &&
       e.longitude <= mapBounds.east &&
       e.latitude >= mapBounds.south &&
       e.latitude <= mapBounds.north;
-    const visible = events.filter(inBounds);
-    const hidden = events.filter(e => !inBounds(e));
-    return [...visible, ...hidden];
+    return {
+      visibleEvents: events.filter(inBounds),
+      hiddenEvents: events.filter(e => !inBounds(e)),
+    };
   }, [events, mapBounds]);
-
-  const visibleCount = useMemo(() => {
-    if (!mapBounds) return null;
-    return sortedEvents.filter(e =>
-      e.longitude >= mapBounds.west &&
-      e.longitude <= mapBounds.east &&
-      e.latitude >= mapBounds.south &&
-      e.latitude <= mapBounds.north
-    ).length;
-  }, [sortedEvents, mapBounds]);
-
-  // Afficher les 50 premiers événements (pour performances)
-  const displayedEvents = sortedEvents.slice(0, 50);
 
   if (isCollapsed) {
     return (
@@ -139,21 +127,78 @@ export function Sidebar({
       {/* Contenu */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         {activeTab === 'list' ? (
-          <div className="p-4 space-y-3">
-            {displayedEvents.length === 0 ? (
+          <div className="p-4 space-y-4">
+            {events.length === 0 ? (
               <div className="text-center py-8 text-text-secondary">
                 <MapIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="font-medium">Aucun événement trouvé</p>
                 <p className="text-sm mt-1">Essayez de modifier vos filtres</p>
               </div>
-            ) : (
+            ) : visibleEvents !== null ? (
               <>
-                {visibleCount !== null && visibleCount > 0 && (
-                  <p className="text-xs text-text-secondary font-medium px-1 pb-1">
-                    <span className="text-accent-coral font-semibold">{visibleCount}</span> visible{visibleCount > 1 ? 's' : ''} sur la carte · {events.length} au total
-                  </p>
+                {/* Section : visibles sur la carte */}
+                <div className="rounded-xl border-2 border-accent-coral/30 bg-accent-coral/5 overflow-hidden">
+                  <div className="px-3 py-2 bg-accent-coral/10 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-accent-coral animate-pulse" />
+                    <span className="text-xs font-semibold text-accent-coral uppercase tracking-wide">
+                      Visibles sur la carte ({visibleEvents.length})
+                    </span>
+                  </div>
+                  <div className="p-2 space-y-2">
+                    {visibleEvents.length === 0 ? (
+                      <p className="text-center text-sm text-text-secondary py-3">
+                        Aucun événement dans cette zone
+                      </p>
+                    ) : (
+                      visibleEvents.slice(0, 50).map((event) => (
+                        <EventCard
+                          key={event.id}
+                          event={event}
+                          isSelected={selectedEvent?.id === event.id}
+                          isHovered={hoveredEvent?.id === event.id}
+                          onClick={() => onSelectEvent(event)}
+                          onMouseEnter={() => onHoverEvent(event)}
+                          onMouseLeave={() => onHoverEvent(null)}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Section : hors champ */}
+                {hiddenEvents.length > 0 && (
+                  <div className="rounded-xl border border-primary/10 bg-white/50 overflow-hidden">
+                    <div className="px-3 py-2 bg-primary/5 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-primary/30" />
+                      <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+                        Autres événements ({hiddenEvents.length})
+                      </span>
+                    </div>
+                    <div className="p-2 space-y-2">
+                      {hiddenEvents.slice(0, 30).map((event) => (
+                        <EventCard
+                          key={event.id}
+                          event={event}
+                          isSelected={selectedEvent?.id === event.id}
+                          isHovered={hoveredEvent?.id === event.id}
+                          onClick={() => onSelectEvent(event)}
+                          onMouseEnter={() => onHoverEvent(event)}
+                          onMouseLeave={() => onHoverEvent(null)}
+                        />
+                      ))}
+                      {hiddenEvents.length > 30 && (
+                        <p className="text-center text-xs text-text-secondary py-2">
+                          +{hiddenEvents.length - 30} autres — zoomez ou déplacez la carte
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 )}
-                {displayedEvents.map((event) => (
+              </>
+            ) : (
+              /* Pas de bounds encore : liste simple */
+              <>
+                {hiddenEvents.slice(0, 50).map((event) => (
                   <EventCard
                     key={event.id}
                     event={event}
@@ -166,7 +211,7 @@ export function Sidebar({
                 ))}
                 {events.length > 50 && (
                   <p className="text-center text-sm text-text-secondary py-2">
-                    Affichage limité à 50 événements. Zoomez sur la carte pour voir plus de détails.
+                    Affichage limité à 50 événements.
                   </p>
                 )}
               </>
