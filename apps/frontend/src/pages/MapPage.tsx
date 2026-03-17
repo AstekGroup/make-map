@@ -5,7 +5,7 @@ import { useEvents } from '@/hooks';
 import { MapView } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchOverlay } from '@/components/Map/SearchOverlay';
-import { Loader2, List, Home, Filter } from 'lucide-react';
+import { Loader2, List, Home, Filter, Wifi } from 'lucide-react';
 
 export interface MapViewHandle {
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -117,6 +117,13 @@ export function MapPage() {
         >
           <List className="w-4 h-4 group-hover:scale-110 transition-transform text-accent-magenta" />
           Voir la liste
+        </button>
+        <button
+          onClick={() => navigate('/evenements?modality=distanciel')}
+          className="bg-white shadow-popup rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold text-primary hover:bg-surface-beige transition-all border border-primary/5 group"
+        >
+          <Wifi className="w-4 h-4 group-hover:scale-110 transition-transform text-accent-coral" />
+          Événements en ligne
         </button>
       </div>
 

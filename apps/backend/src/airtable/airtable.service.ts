@@ -14,10 +14,8 @@ import {
 } from './airtable-mapping.util';
 import { GeocodingService } from '../geocoding/geocoding.service';
 
-// Valeurs qui EXCLUENT un événement de la cartographie
-const MODERATION_EXCLUDED = 'Evénement validé à ne pas rendre visible';
-const VISIBILITY_NOT_PUBLIC =
-  "Je souhaite qu'il soit comptabilisé dans la Semaine de l'IA pour Tous mais non visible pour le grand public";
+// Seule valeur qui autorise l'affichage sur la cartographie
+const MODERATION_VISIBLE = 'Evénement validé et à mettre sur la carto ';
 
 @Injectable()
 export class AirtableService {
@@ -68,8 +66,8 @@ export class AirtableService {
           ...event,
           latitude: geo.latitude,
           longitude: geo.longitude,
-          region: geo.region || event.region,
-          department: geo.department || event.department,
+          region: (geo.region && geo.region !== 'Inconnue') ? geo.region : event.region,
+          department: (geo.department && geo.department !== 'Inconnu') ? geo.department : event.department,
         };
       }
       return event;
@@ -140,7 +138,7 @@ export class AirtableService {
   private buildFilterFormula(devMode: boolean): string | null {
     if (devMode) return null;
 
-    return `AND({Modération de l'événement} != "${MODERATION_EXCLUDED}", {Visibilité sur la cartographie} != "${VISIBILITY_NOT_PUBLIC}")`;
+    return `{Modération de l'événement} = "${MODERATION_VISIBLE}"`;
   }
 
   /**
