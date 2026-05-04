@@ -1,15 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { EventType, TargetAudience } from '@/types/event';
-import { useEvents } from '@/hooks';
+import { useEvents, type EventFilters } from '@/hooks';
 import { EventListView, EventFiltersBar } from '@/components/Events';
 import { Loader2, Home, Map } from 'lucide-react';
 
 export function EventsListPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const initialModality = searchParams.get('modality') as any;
-  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialModality = searchParams.get('modality') as string | null;
+
   const {
     events,
     loading,
@@ -23,10 +23,41 @@ export function EventsListPage() {
     stats,
   } = useEvents();
 
+  const searchParamsKey = searchParams.toString();
+
+  // Recherche textuelle ↔ `?q=` (retour navigateur / lien partageable)
+  useEffect(() => {
+    const q = new URLSearchParams(searchParamsKey).get('q') ?? '';
+    updateFilters({ search: q });
+  }, [searchParamsKey, updateFilters]);
+
+  const handleUpdateFilters = useCallback(
+    (partial: Partial<EventFilters>) => {
+      updateFilters(partial);
+      if (partial.search !== undefined) {
+        setSearchParams(
+          (prev) => {
+            const next = new URLSearchParams(prev);
+            if (partial.search) next.set('q', partial.search);
+            else next.delete('q');
+            return next;
+          },
+          { replace: true },
+        );
+      }
+    },
+    [updateFilters, setSearchParams],
+  );
+
+  const handleResetFilters = useCallback(() => {
+    resetFilters();
+    setSearchParams(new URLSearchParams(), { replace: true });
+  }, [resetFilters, setSearchParams]);
+
   // Initialisation de la modalité depuis l'URL si présente
   useEffect(() => {
     if (initialModality && ['presentiel', 'distanciel', 'all'].includes(initialModality)) {
-      updateFilters({ modality: initialModality });
+      updateFilters({ modality: initialModality as EventFilters['modality'] });
     }
   }, []); // Exécuté une seule fois au montage
 
@@ -95,11 +126,11 @@ export function EventsListPage() {
       {/* Filters bar with integrated Search and Modality Switcher */}
       <EventFiltersBar
         filters={filters}
-        onUpdateFilters={updateFilters}
+        onUpdateFilters={handleUpdateFilters}
         onToggleRegion={toggleRegion}
         onToggleType={(type) => toggleType(type as EventType)}
         onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
-        onResetFilters={resetFilters}
+        onResetFilters={handleResetFilters}
       />
       
       {/* Event list grid with pagination */}

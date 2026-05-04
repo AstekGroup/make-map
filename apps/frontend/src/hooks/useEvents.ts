@@ -125,7 +125,7 @@ export function useEvents() {
   }, [filteredEvents]);
 
   // Actions sur les filtres
-  const updateFilters = (newFilters: Partial<EventFilters>) => {
+  const updateFilters = useCallback((newFilters: Partial<EventFilters>) => {
     setFilters((prev) => {
       const next = { ...prev, ...newFilters };
       const nextMode = newFilters.dateFilter ?? prev.dateFilter;
@@ -135,11 +135,11 @@ export function useEvents() {
       }
       return next;
     });
-  };
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters(initialFilters);
-  };
+  }, []);
 
   const toggleRegion = (region: string) => {
     setFilters(prev => ({
