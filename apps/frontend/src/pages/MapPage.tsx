@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Event, EventType } from '@/types/event';
+import { Event, EventType, TargetAudience } from '@/types/event';
 import { useEvents } from '@/hooks';
 import { MapView, MapBounds } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
@@ -24,6 +24,7 @@ export function MapPage() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleAudience,
     stats,
   } = useEvents();
 
@@ -150,6 +151,7 @@ export function MapPage() {
           onUpdateFilters={updateFilters}
           onToggleRegion={toggleRegion}
           onToggleType={(type) => toggleType(type as EventType)}
+          onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
           onResetFilters={resetFilters}
           selectedEvent={selectedEvent}
           onSelectEvent={handleSidebarEventClick}
@@ -169,6 +171,7 @@ export function MapPage() {
             onUpdateFilters={updateFilters}
             onToggleRegion={toggleRegion}
             onToggleType={(type) => toggleType(type as EventType)}
+          onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
             onResetFilters={resetFilters}
             selectedEvent={selectedEvent}
             onSelectEvent={(event) => {

@@ -12,6 +12,7 @@ interface SidebarProps {
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
+  onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
   selectedEvent: Event | null;
   onSelectEvent: (event: Event | null) => void;
@@ -31,6 +32,7 @@ export function Sidebar({
   onUpdateFilters,
   onToggleRegion,
   onToggleType,
+  onToggleAudience,
   onResetFilters,
   selectedEvent,
   onSelectEvent,
@@ -117,7 +119,7 @@ export function Sidebar({
           >
             <Filter className="w-4 h-4" />
             Filtres
-            {(filters.search || filters.postalCode || filters.regions.length > 0 || filters.types.length > 0 || filters.dateFilter !== 'all') && (
+            {(filters.search || filters.postalCode || filters.regions.length > 0 || filters.types.length > 0 || filters.audiences.length > 0 || filters.dateFilter !== 'all') && (
               <span className="w-2 h-2 bg-accent-coral rounded-full" />
             )}
           </button>
@@ -223,6 +225,7 @@ export function Sidebar({
             onUpdateFilters={onUpdateFilters}
             onToggleRegion={onToggleRegion}
             onToggleType={onToggleType}
+            onToggleAudience={onToggleAudience}
             onResetFilters={onResetFilters}
             stats={stats}
           />
@@ -235,7 +238,7 @@ export function Sidebar({
           <span className="text-text-secondary">
             <span className="font-semibold text-accent-coral">{stats.duringWeek}</span> pendant la Semaine de l'IA
           </span>
-          {(filters.search || filters.postalCode || filters.regions.length > 0 || filters.types.length > 0 || filters.dateFilter !== 'all') && (
+          {(filters.search || filters.postalCode || filters.regions.length > 0 || filters.types.length > 0 || filters.audiences.length > 0 || filters.dateFilter !== 'all') && (
             <button
               onClick={onResetFilters}
               className="text-accent-magenta hover:underline font-medium"

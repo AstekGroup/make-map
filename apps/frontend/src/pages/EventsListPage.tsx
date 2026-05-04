@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { EventType } from '@/types/event';
+import { EventType, TargetAudience } from '@/types/event';
 import { useEvents } from '@/hooks';
 import { EventListView, EventFiltersBar } from '@/components/Events';
 import { Loader2, Home, Map } from 'lucide-react';
@@ -19,6 +19,7 @@ export function EventsListPage() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleAudience,
     stats,
   } = useEvents();
 
@@ -97,6 +98,7 @@ export function EventsListPage() {
         onUpdateFilters={updateFilters}
         onToggleRegion={toggleRegion}
         onToggleType={(type) => toggleType(type as EventType)}
+        onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
         onResetFilters={resetFilters}
       />
       

@@ -2,6 +2,8 @@
 
 Backend NestJS servant de proxy sécurisé pour l'API Airtable. Gère la transformation des données, le géocodage et le cache.
 
+**Assistants IA** : [AGENTS.md](./AGENTS.md) dans ce dossier ; index global [AGENTS.md](../../AGENTS.md).
+
 ## Stack
 
 | Technologie | Usage |

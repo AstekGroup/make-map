@@ -1,6 +1,6 @@
 import { EventFilters } from '@/hooks';
-import { EventType, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, REGIONS } from '@/types/event';
-import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash } from 'lucide-react';
+import { EventType, TargetAudience, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, TARGET_AUDIENCE_LABELS, REGIONS } from '@/types/event';
+import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, Users, History } from 'lucide-react';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
@@ -10,6 +10,7 @@ interface FilterPanelProps {
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
+  onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
   stats: {
     total: number;
@@ -19,12 +20,14 @@ interface FilterPanelProps {
 }
 
 const EVENT_TYPES: EventType[] = ['cafe-ia', 'atelier', 'conference', 'jeu', 'autre'];
+const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'qpv', 'scolaire', 'handicap', 'salaries', 'adherents'];
 
 export function FilterPanel({
   filters,
   onUpdateFilters,
   onToggleRegion,
   onToggleType,
+  onToggleAudience,
   onResetFilters,
 }: FilterPanelProps) {
   const hasActiveFilters =
@@ -32,6 +35,7 @@ export function FilterPanel({
     filters.postalCode ||
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
+    filters.audiences.length > 0 ||
     filters.dateFilter !== 'all';
 
   return (
@@ -132,6 +136,33 @@ export function FilterPanel({
           </div>
         </FilterAccordion>
 
+        {/* Filtre par public cible */}
+        <FilterAccordion
+          title="Public cible"
+          icon={<Users className="w-4 h-4" />}
+          defaultOpen={filters.audiences.length > 0}
+          badge={filters.audiences.length}
+        >
+          <div className="space-y-2">
+            {AUDIENCES.map((audience) => (
+              <label
+                key={audience}
+                className="flex items-center gap-3 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={filters.audiences.includes(audience)}
+                  onChange={() => onToggleAudience(audience)}
+                  className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                />
+                <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                  {TARGET_AUDIENCE_LABELS[audience]}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterAccordion>
+
         {/* Filtre par code postal */}
         <FilterAccordion
           title="Code postal"
@@ -218,6 +249,32 @@ export function FilterPanel({
             </div>
           </div>
         </FilterAccordion>
+      </div>
+
+      {/* Toggle événements passés */}
+      <div className="px-4 py-3 border-t border-primary/10">
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <button
+            role="switch"
+            aria-checked={filters.showPastEvents}
+            onClick={() => onUpdateFilters({ showPastEvents: !filters.showPastEvents })}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
+              filters.showPastEvents ? 'bg-accent-coral' : 'bg-primary/20'
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                filters.showPastEvents ? 'translate-x-4' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+          <div className="flex items-center gap-2">
+            <History className="w-4 h-4 text-text-secondary" />
+            <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+              Afficher les événements passés
+            </span>
+          </div>
+        </label>
       </div>
 
       {/* Bouton réinitialiser */}

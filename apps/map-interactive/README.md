@@ -2,6 +2,8 @@
 
 Application React standalone pour afficher les événements de la Semaine de l'IA pour Tous sur une carte interactive de France.
 
+Dans le monorepo **make-map**, ce dossier sert de **référence historique** ; l’app active est `apps/frontend`. Pour les agents IA : [AGENTS.md](./AGENTS.md) dans ce dossier ; index [AGENTS.md](../../AGENTS.md) — **ne pas modifier** ce package sauf décision explicite.
+
 ## Aperçu
 
 Cette application permet de visualiser et filtrer 1500 événements de sensibilisation à l'intelligence artificielle organisés sur tout le territoire français.

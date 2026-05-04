@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Event, EventType, EventsGeoJSON } from '@/types/event';
+import { Event, EventType, TargetAudience, EventsGeoJSON } from '@/types/event';
 import { fetchEvents, eventsToGeoJSON } from '@/services/api';
 
 export interface EventFilters {
@@ -7,8 +7,10 @@ export interface EventFilters {
   dateFilter: 'all' | 'during-week' | 'other';
   regions: string[];
   types: EventType[];
+  audiences: TargetAudience[];
   postalCode: string;
   modality: 'all' | 'presentiel' | 'distanciel';
+  showPastEvents: boolean;
 }
 
 const initialFilters: EventFilters = {
@@ -16,8 +18,10 @@ const initialFilters: EventFilters = {
   dateFilter: 'all',
   regions: [],
   types: [],
+  audiences: [],
   postalCode: '',
   modality: 'all',
+  showPastEvents: false,
 };
 
 export function useEvents() {
@@ -46,9 +50,23 @@ export function useEvents() {
     loadEvents();
   }, [devMode]);
 
+  // Date du jour (sans heures) pour le filtre des événements passés
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
   // Filtrer les événements
   const filteredEvents = useMemo(() => {
     return events.filter(event => {
+      // Filtre événements passés (par défaut on masque les passés)
+      if (!filters.showPastEvents) {
+        const eventEndDate = new Date(event.endDate || event.date);
+        eventEndDate.setHours(23, 59, 59, 999);
+        if (eventEndDate < today) return false;
+      }
+
       // Filtre recherche
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
@@ -74,6 +92,9 @@ export function useEvents() {
 
       // Filtre types
       if (filters.types.length > 0 && !filters.types.includes(event.type)) return false;
+
+      // Filtre public cible
+      if (filters.audiences.length > 0 && !filters.audiences.some(a => event.targetAudience.includes(a))) return false;
 
       // Filtre code postal
       if (filters.postalCode) {
@@ -117,6 +138,15 @@ export function useEvents() {
     }));
   };
 
+  const toggleAudience = (audience: TargetAudience) => {
+    setFilters(prev => ({
+      ...prev,
+      audiences: prev.audiences.includes(audience)
+        ? prev.audiences.filter(a => a !== audience)
+        : [...prev.audiences, audience],
+    }));
+  };
+
   // Toggle mode dev (afficher tous les événements vs validés seulement)
   const toggleDevMode = useCallback(() => {
     setDevMode(prev => !prev);
@@ -152,6 +182,7 @@ export function useEvents() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleAudience,
     stats,
     devMode,
     toggleDevMode,

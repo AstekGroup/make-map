@@ -8,6 +8,8 @@ Carte interactive pour visualiser les 1500+ événements de la [Semaine de l'IA 
 
 ```
 make-map/
+├── AGENTS.md               # Consignes pour assistants IA (Cursor, etc.)
+├── CLAUDE.md               # Architecture détaillée pour agents
 ├── apps/
 │   ├── frontend/           # React + Vite (consomme l'API backend)
 │   ├── backend/            # NestJS (proxy Airtable + géocodage)
@@ -106,6 +108,18 @@ pnpm deploy:v2
 ```
 
 Voir [deploy/README.md](deploy/README.md) pour le guide complet.
+
+## Documentation pour assistants IA
+
+Format ouvert [agents.md](https://agents.md/) : un **`AGENTS.md` par zone** du monorepo (l’agent privilégie en général le fichier le plus proche du dossier de travail).
+
+- [AGENTS.md](AGENTS.md) — index et règles globales
+- [apps/frontend/AGENTS.md](apps/frontend/AGENTS.md) — frontend React / carte
+- [apps/backend/AGENTS.md](apps/backend/AGENTS.md) — API NestJS
+- [shared/types/AGENTS.md](shared/types/AGENTS.md) — package `@make-map/types`
+- [deploy/AGENTS.md](deploy/AGENTS.md) — déploiement
+- [apps/map-interactive/AGENTS.md](apps/map-interactive/AGENTS.md) — référence (non modifiée)
+- [CLAUDE.md](CLAUDE.md) — architecture et conventions détaillées
 
 ## Ressources
 

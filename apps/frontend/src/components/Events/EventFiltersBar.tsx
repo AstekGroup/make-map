@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { EventFilters } from '@/hooks';
-import { EventType, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, REGIONS } from '@/types/event';
+import { EventType, TargetAudience, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, TARGET_AUDIENCE_LABELS, REGIONS } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
-import { ChevronDown, RotateCcw, X, Search, MapPin, Globe } from 'lucide-react';
+import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, History } from 'lucide-react';
 
 interface EventFiltersBarProps {
   filters: EventFilters;
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
+  onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
 }
 
 const EVENT_TYPES: EventType[] = ['cafe-ia', 'atelier', 'conference', 'jeu', 'autre'];
+const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'qpv', 'scolaire', 'handicap', 'salaries', 'adherents'];
 
 interface FilterDropdownProps {
   label: string;
@@ -65,6 +67,7 @@ export function EventFiltersBar({
   onUpdateFilters,
   onToggleRegion,
   onToggleType,
+  onToggleAudience,
   onResetFilters,
 }: EventFiltersBarProps) {
   const hasActiveFilters =
@@ -72,11 +75,20 @@ export function EventFiltersBar({
     filters.postalCode ||
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
+    filters.audiences.length > 0 ||
     filters.dateFilter !== 'all' ||
     filters.modality !== 'all';
 
   // Collecte des tags actifs
   const activeTags: { key: string; label: string; onRemove: () => void }[] = [];
+
+  if (filters.showPastEvents) {
+    activeTags.push({
+      key: 'pastEvents',
+      label: 'Événements passés',
+      onRemove: () => onUpdateFilters({ showPastEvents: false }),
+    });
+  }
 
   if (filters.dateFilter !== 'all') {
     const dateLabels: Record<string, string> = {
@@ -105,6 +117,14 @@ export function EventFiltersBar({
       onRemove: () => onUpdateFilters({ postalCode: '' }),
     });
   }
+
+  filters.audiences.forEach((audience) => {
+    activeTags.push({
+      key: `audience-${audience}`,
+      label: TARGET_AUDIENCE_LABELS[audience as TargetAudience] || audience,
+      onRemove: () => onToggleAudience(audience),
+    });
+  });
 
   filters.regions.forEach((region) => {
     activeTags.push({
@@ -239,6 +259,31 @@ export function EventFiltersBar({
           </div>
         </FilterDropdown>
         
+        {/* Audience filter */}
+        <FilterDropdown
+          label="Public cible"
+          badge={filters.audiences.length || undefined}
+        >
+          <div className="p-2 space-y-1">
+            {AUDIENCES.map((audience) => (
+              <label
+                key={audience}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={filters.audiences.includes(audience)}
+                  onChange={() => onToggleAudience(audience)}
+                  className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                />
+                <span className={filters.audiences.includes(audience) ? 'text-primary font-medium' : 'text-text-secondary'}>
+                  {TARGET_AUDIENCE_LABELS[audience]}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterDropdown>
+
         {/* Postal code filter (uniquement si présentiel ou tous) */}
         {filters.modality !== 'distanciel' && (
           <div className="relative">
@@ -312,6 +357,19 @@ export function EventFiltersBar({
             </div>
           </FilterDropdown>
         )}
+
+        {/* Toggle événements passés */}
+        <button
+          onClick={() => onUpdateFilters({ showPastEvents: !filters.showPastEvents })}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            filters.showPastEvents
+              ? 'bg-primary text-white'
+              : 'bg-white text-primary hover:bg-primary/5'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          Événements passés
+        </button>
       </div>
 
       {/* Active filter tags */}

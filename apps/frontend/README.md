@@ -2,6 +2,8 @@
 
 Application React standalone pour afficher les événements de la Semaine de l'IA pour Tous sur une carte interactive de France.
 
+**Assistants IA** : [AGENTS.md](./AGENTS.md) dans ce dossier (détail local) ; index global [AGENTS.md](../../AGENTS.md). Cette app consomme le backend NestJS, pas Airtable en direct.
+
 ## Aperçu
 
 Cette application permet de visualiser et filtrer 1500 événements de sensibilisation à l'intelligence artificielle organisés sur tout le territoire français.

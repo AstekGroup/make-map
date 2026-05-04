@@ -2,6 +2,8 @@
 
 Guide de deploiement de l'application Make Map sur une instance Scaleway DEV1-S avec Docker Compose.
 
+Consignes déploiement pour assistants IA : [AGENTS.md](./AGENTS.md) ; index monorepo [AGENTS.md](../../AGENTS.md).
+
 ## Architecture
 
 ```
