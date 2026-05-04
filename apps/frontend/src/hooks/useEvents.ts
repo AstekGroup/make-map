@@ -1,10 +1,16 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Event, EventType, TargetAudience, EventsGeoJSON, EVENT_TYPES_ALL } from '@/types/event';
 import { fetchEvents, eventsToGeoJSON } from '@/services/api';
+import type { DateFilterMode } from '@/utils/eventDateRange';
+import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
 
 export interface EventFilters {
   search: string;
-  dateFilter: 'all' | 'during-week' | 'other';
+  dateFilter: DateFilterMode;
+  /** YYYY-MM-DD — utilisé si `dateFilter === 'custom'`. */
+  dateFrom: string;
+  /** YYYY-MM-DD inclusif ; vide = même jour que `dateFrom`. */
+  dateTo: string;
   regions: string[];
   types: EventType[];
   audiences: TargetAudience[];
@@ -16,6 +22,8 @@ export interface EventFilters {
 const initialFilters: EventFilters = {
   search: '',
   dateFilter: 'all',
+  dateFrom: '',
+  dateTo: '',
   regions: [],
   types: [],
   audiences: [],
@@ -86,6 +94,11 @@ export function useEvents() {
       // Filtre date
       if (filters.dateFilter === 'during-week' && !event.isDuringWeek) return false;
       if (filters.dateFilter === 'other' && event.isDuringWeek) return false;
+      if (filters.dateFilter === 'custom' && filters.dateFrom) {
+        const rangeStart = filters.dateFrom.slice(0, 10);
+        const rangeEnd = (filters.dateTo || filters.dateFrom).slice(0, 10);
+        if (!eventIntersectsYmdRange(event, rangeStart, rangeEnd)) return false;
+      }
 
       // Filtre régions
       if (filters.regions.length > 0 && !filters.regions.includes(event.region)) return false;
@@ -113,7 +126,15 @@ export function useEvents() {
 
   // Actions sur les filtres
   const updateFilters = (newFilters: Partial<EventFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => {
+      const next = { ...prev, ...newFilters };
+      const nextMode = newFilters.dateFilter ?? prev.dateFilter;
+      if (newFilters.dateFilter !== undefined && nextMode !== 'custom') {
+        next.dateFrom = '';
+        next.dateTo = '';
+      }
+      return next;
+    });
   };
 
   const resetFilters = () => {

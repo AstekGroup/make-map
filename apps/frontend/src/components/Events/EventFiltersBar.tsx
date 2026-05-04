@@ -10,6 +10,8 @@ import {
   EVENT_TYPES_ALL,
 } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
+import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
+import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
 import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, History } from 'lucide-react';
 
 interface EventFiltersBarProps {
@@ -62,7 +64,7 @@ function FilterDropdown({ label, children, badge }: FilterDropdownProps) {
       </button>
       
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-popup z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-popup z-50 min-w-[220px] max-h-[min(90vh,520px)] overflow-y-auto">
           {children}
         </div>
       )}
@@ -84,7 +86,7 @@ export function EventFiltersBar({
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
     filters.audiences.length > 0 ||
-    filters.dateFilter !== 'all' ||
+    isDateFilterActive(filters.dateFilter, filters.dateFrom) ||
     filters.modality !== 'all';
 
   // Collecte des tags actifs
@@ -98,15 +100,23 @@ export function EventFiltersBar({
     });
   }
 
-  if (filters.dateFilter !== 'all') {
+  if (filters.dateFilter === 'custom' && filters.dateFrom) {
+    activeTags.push({
+      key: 'date',
+      label: formatFrDateRangeLabel(filters.dateFrom, filters.dateTo),
+      onRemove: () =>
+        onUpdateFilters({ dateFilter: 'all', dateFrom: '', dateTo: '' }),
+    });
+  } else if (filters.dateFilter === 'during-week' || filters.dateFilter === 'other') {
     const dateLabels: Record<string, string> = {
       'during-week': 'Semaine de l\'IA',
-      'other': 'Autres dates',
+      other: 'Autres dates',
     };
     activeTags.push({
       key: 'date',
-      label: dateLabels[filters.dateFilter] || filters.dateFilter,
-      onRemove: () => onUpdateFilters({ dateFilter: 'all' }),
+      label: dateLabels[filters.dateFilter],
+      onRemove: () =>
+        onUpdateFilters({ dateFilter: 'all', dateFrom: '', dateTo: '' }),
     });
   }
 
@@ -209,17 +219,20 @@ export function EventFiltersBar({
         {/* Date filter */}
         <FilterDropdown
           label="Date"
-          badge={filters.dateFilter !== 'all' ? 1 : undefined}
+          badge={isDateFilterActive(filters.dateFilter, filters.dateFrom) ? 1 : undefined}
         >
           <div className="p-2 space-y-1">
             {[
               { value: 'all', label: 'Toutes les dates' },
               { value: 'during-week', label: 'Semaine de l\'IA (18-24 mai)' },
               { value: 'other', label: 'Autres dates' },
+              { value: 'custom', label: 'Plage au calendrier' },
             ].map((option) => (
               <button
                 key={option.value}
-                onClick={() => onUpdateFilters({ dateFilter: option.value as EventFilters['dateFilter'] })}
+                onClick={() =>
+                  onUpdateFilters({ dateFilter: option.value as EventFilters['dateFilter'] })
+                }
                 className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                   filters.dateFilter === option.value
                     ? 'bg-primary/10 text-primary font-medium'
@@ -229,6 +242,9 @@ export function EventFiltersBar({
                 {option.label}
               </button>
             ))}
+            {filters.dateFilter === 'custom' && (
+              <DateCustomRangeInputs filters={filters} onUpdateFilters={onUpdateFilters} compact />
+            )}
           </div>
         </FilterDropdown>
         

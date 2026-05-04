@@ -5,6 +5,7 @@ import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
 import { ChevronLeft, ChevronRight, Filter, List, MapIcon } from 'lucide-react';
 import { MapBounds } from '@/components/Map';
+import { isDateFilterActive } from '@/utils/eventDateRange';
 
 interface SidebarProps {
   events: Event[];
@@ -57,6 +58,14 @@ export function Sidebar({
       hiddenEvents: events.filter(e => !inBounds(e)),
     };
   }, [events, mapBounds]);
+
+  const filtersActiveBadge =
+    !!filters.search ||
+    !!filters.postalCode ||
+    filters.regions.length > 0 ||
+    filters.types.length > 0 ||
+    filters.audiences.length > 0 ||
+    isDateFilterActive(filters.dateFilter, filters.dateFrom);
 
   if (isCollapsed) {
     return (
@@ -119,7 +128,7 @@ export function Sidebar({
           >
             <Filter className="w-4 h-4" />
             Filtres
-            {(filters.search || filters.postalCode || filters.regions.length > 0 || filters.types.length > 0 || filters.audiences.length > 0 || filters.dateFilter !== 'all') && (
+            {filtersActiveBadge && (
               <span className="w-2 h-2 bg-accent-coral rounded-full" />
             )}
           </button>
@@ -238,7 +247,7 @@ export function Sidebar({
           <span className="text-text-secondary">
             <span className="font-semibold text-accent-coral">{stats.duringWeek}</span> pendant la Semaine de l'IA
           </span>
-          {(filters.search || filters.postalCode || filters.regions.length > 0 || filters.types.length > 0 || filters.audiences.length > 0 || filters.dateFilter !== 'all') && (
+          {filtersActiveBadge && (
             <button
               onClick={onResetFilters}
               className="text-accent-magenta hover:underline font-medium"

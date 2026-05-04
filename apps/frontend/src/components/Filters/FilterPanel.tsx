@@ -12,6 +12,8 @@ import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, Users, History } fro
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
+import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
+import { isDateFilterActive } from '@/utils/eventDateRange';
 
 interface FilterPanelProps {
   filters: EventFilters;
@@ -44,7 +46,7 @@ export function FilterPanel({
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
     filters.audiences.length > 0 ||
-    filters.dateFilter !== 'all';
+    isDateFilterActive(filters.dateFilter, filters.dateFrom);
 
   return (
     <div className="flex flex-col h-full">
@@ -77,13 +79,14 @@ export function FilterPanel({
         <FilterAccordion
           title="Date"
           icon={<Calendar className="w-4 h-4" />}
-          defaultOpen={filters.dateFilter !== 'all'}
+          defaultOpen={isDateFilterActive(filters.dateFilter, filters.dateFrom)}
         >
           <div className="space-y-2">
             {[
               { value: 'all', label: 'Tous les événements' },
               { value: 'during-week', label: 'Pendant la Semaine de l\'IA (18-24 mai)' },
               { value: 'other', label: 'Autres dates' },
+              { value: 'custom', label: 'Plage au calendrier (jour ou période)' },
             ].map((option) => (
               <label
                 key={option.value}
@@ -104,6 +107,9 @@ export function FilterPanel({
                 </span>
               </label>
             ))}
+            {filters.dateFilter === 'custom' && (
+              <DateCustomRangeInputs filters={filters} onUpdateFilters={onUpdateFilters} />
+            )}
           </div>
         </FilterAccordion>
 
