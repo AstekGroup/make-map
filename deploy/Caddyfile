@@ -7,7 +7,7 @@
 # Pour utiliser avec une IP (HTTP seulement) :
 #   Garder ":80" comme ci-dessous.
 
-:80 {
+{$DOMAIN:localhost} {
     # API backend
     handle /api/* {
         reverse_proxy backend:8080

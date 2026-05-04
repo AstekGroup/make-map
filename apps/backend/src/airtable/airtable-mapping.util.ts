@@ -23,14 +23,14 @@ const FORMAT_MAP: Record<string, FormatMapping> = {
   'Conférence / Table-ronde / Débat': { format: 'conference', type: 'conference' },
   'Atelier / Café IA': { format: 'cafe-ia', type: 'cafe-ia' },
   'Formation / Sensibilisation': { format: 'formation', type: 'atelier' },
-  'Jeu / Hackathon': { format: 'autre', type: 'jeu' },
+  'Jeu / Hackathon': { format: 'autre', type: 'autre' },
   'Atelier': { format: 'atelier', type: 'atelier' },
   'Café IA': { format: 'cafe-ia', type: 'cafe-ia' },
   'Conférence': { format: 'conference', type: 'conference' },
   'Débat': { format: 'debat', type: 'conference' },
   'Formation': { format: 'formation', type: 'atelier' },
-  'Visite guidée / Portes ouvertes': { format: 'visite', type: 'autre' },
-  'Ciné-débat / Exposition / Festival': { format: 'cine-debat', type: 'autre' },
+  'Visite guidée / Portes ouvertes': { format: 'visite', type: 'visite' },
+  'Ciné-débat / Exposition / Festival': { format: 'cine-debat', type: 'cine-debat' },
   "Prise en main d'outil": { format: 'prise-en-main', type: 'atelier' },
 };
 

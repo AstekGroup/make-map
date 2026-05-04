@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Event, EventType } from '@/types/event';
+import { Event, EventType, TargetAudience } from '@/types/event';
 import { useEvents } from '@/hooks';
 import { MapView } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
@@ -16,6 +16,7 @@ function App() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleAudience,
     stats,
   } = useEvents();
 
@@ -80,6 +81,7 @@ function App() {
         onUpdateFilters={updateFilters}
         onToggleRegion={toggleRegion}
         onToggleType={(type) => toggleType(type as EventType)}
+        onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
         onResetFilters={resetFilters}
         selectedEvent={selectedEvent}
         onSelectEvent={setSelectedEvent}

@@ -1,23 +1,35 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Event, EventType, EventsGeoJSON } from '@/types/event';
+import { Event, EventType, TargetAudience, EventsGeoJSON, EVENT_TYPES_ALL } from '@/types/event';
 import { fetchEvents, eventsToGeoJSON } from '@/services/api';
+import type { DateFilterMode } from '@/utils/eventDateRange';
+import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
 
 export interface EventFilters {
   search: string;
-  dateFilter: 'all' | 'during-week' | 'other';
+  dateFilter: DateFilterMode;
+  /** YYYY-MM-DD — utilisé si `dateFilter === 'custom'`. */
+  dateFrom: string;
+  /** YYYY-MM-DD inclusif ; vide = même jour que `dateFrom`. */
+  dateTo: string;
   regions: string[];
   types: EventType[];
+  audiences: TargetAudience[];
   postalCode: string;
   modality: 'all' | 'presentiel' | 'distanciel';
+  showPastEvents: boolean;
 }
 
 const initialFilters: EventFilters = {
   search: '',
   dateFilter: 'all',
+  dateFrom: '',
+  dateTo: '',
   regions: [],
   types: [],
+  audiences: [],
   postalCode: '',
   modality: 'all',
+  showPastEvents: false,
 };
 
 export function useEvents() {
@@ -46,9 +58,23 @@ export function useEvents() {
     loadEvents();
   }, [devMode]);
 
+  // Date du jour (sans heures) pour le filtre des événements passés
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
   // Filtrer les événements
   const filteredEvents = useMemo(() => {
     return events.filter(event => {
+      // Filtre événements passés (par défaut on masque les passés)
+      if (!filters.showPastEvents) {
+        const eventEndDate = new Date(event.endDate || event.date);
+        eventEndDate.setHours(23, 59, 59, 999);
+        if (eventEndDate < today) return false;
+      }
+
       // Filtre recherche
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
@@ -68,12 +94,20 @@ export function useEvents() {
       // Filtre date
       if (filters.dateFilter === 'during-week' && !event.isDuringWeek) return false;
       if (filters.dateFilter === 'other' && event.isDuringWeek) return false;
+      if (filters.dateFilter === 'custom' && filters.dateFrom) {
+        const rangeStart = filters.dateFrom.slice(0, 10);
+        const rangeEnd = (filters.dateTo || filters.dateFrom).slice(0, 10);
+        if (!eventIntersectsYmdRange(event, rangeStart, rangeEnd)) return false;
+      }
 
       // Filtre régions
       if (filters.regions.length > 0 && !filters.regions.includes(event.region)) return false;
 
       // Filtre types
       if (filters.types.length > 0 && !filters.types.includes(event.type)) return false;
+
+      // Filtre public cible
+      if (filters.audiences.length > 0 && !filters.audiences.some(a => event.targetAudience.includes(a))) return false;
 
       // Filtre code postal
       if (filters.postalCode) {
@@ -91,13 +125,21 @@ export function useEvents() {
   }, [filteredEvents]);
 
   // Actions sur les filtres
-  const updateFilters = (newFilters: Partial<EventFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  };
+  const updateFilters = useCallback((newFilters: Partial<EventFilters>) => {
+    setFilters((prev) => {
+      const next = { ...prev, ...newFilters };
+      const nextMode = newFilters.dateFilter ?? prev.dateFilter;
+      if (newFilters.dateFilter !== undefined && nextMode !== 'custom') {
+        next.dateFrom = '';
+        next.dateTo = '';
+      }
+      return next;
+    });
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters(initialFilters);
-  };
+  }, []);
 
   const toggleRegion = (region: string) => {
     setFilters(prev => ({
@@ -117,6 +159,15 @@ export function useEvents() {
     }));
   };
 
+  const toggleAudience = (audience: TargetAudience) => {
+    setFilters(prev => ({
+      ...prev,
+      audiences: prev.audiences.includes(audience)
+        ? prev.audiences.filter(a => a !== audience)
+        : [...prev.audiences, audience],
+    }));
+  };
+
   // Toggle mode dev (afficher tous les événements vs validés seulement)
   const toggleDevMode = useCallback(() => {
     setDevMode(prev => !prev);
@@ -128,7 +179,7 @@ export function useEvents() {
     filtered: filteredEvents.length,
     duringWeek: events.filter(e => e.isDuringWeek).length,
     byType: Object.fromEntries(
-      (['cafe-ia', 'atelier', 'conference', 'jeu', 'autre'] as EventType[]).map(type => [
+      EVENT_TYPES_ALL.map(type => [
         type,
         filteredEvents.filter(e => e.type === type).length,
       ])
@@ -152,6 +203,7 @@ export function useEvents() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleAudience,
     stats,
     devMode,
     toggleDevMode,

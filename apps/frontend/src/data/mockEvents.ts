@@ -1,4 +1,4 @@
-import { Event, EventType, EventFormat, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality } from '@/types/event';
+import { Event, EventType, EventFormat, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality, EVENT_TYPES_ALL } from '@/types/event';
 
 // Coordonnées des principales villes françaises par région
 const CITIES: Record<string, { name: string; lat: number; lng: number; department: string; postalCode: string }[]> = {
@@ -121,7 +121,7 @@ const CITIES: Record<string, { name: string; lat: number; lng: number; departmen
   ],
 };
 
-const EVENT_TYPES: EventType[] = ['cafe-ia', 'atelier', 'conference', 'jeu', 'autre'];
+const EVENT_TYPES: EventType[] = [...EVENT_TYPES_ALL];
 
 const EVENT_FORMATS: EventFormat[] = ['debat', 'atelier', 'prise-en-main', 'conference', 'visite', 'cafe-ia', 'cine-debat', 'formation', 'autre'];
 
@@ -173,19 +173,25 @@ const EVENT_TITLES: Record<EventType, string[]> = {
     'Conférence : L\'IA dans la santé',
     'Conférence : Sécurité et IA',
   ],
-  'jeu': [
-    'Jeu : Quiz sur l\'intelligence artificielle',
-    'Jeu : Escape game numérique IA',
-    'Jeu : Qui a peur de l\'IA ?',
-    'Jeu interactif : IA ou humain ?',
-    'Jeu de piste : Découvrir l\'IA en s\'amusant',
+  'visite': [
+    'Visite guidée : Un labo d\'IA',
+    'Portes ouvertes : Fablab et IA',
+    'Visite : Découverte d\'un tiers-lieu numérique',
+  ],
+  'cine-debat': [
+    'Ciné-débat : L\'IA au cinéma',
+    'Exposition : L\'histoire de l\'IA',
+    'Festival : Créations et IA',
   ],
   'autre': [
     'Exposition : L\'histoire de l\'IA',
     'Table ronde : Parlons IA ensemble',
     'Démonstration : Les robots du quotidien',
-    'Visite guidée : Un labo d\'IA',
-    'Projection-débat : L\'IA au cinéma',
+    'Jeu : Quiz sur l\'intelligence artificielle',
+    'Jeu : Escape game numérique IA',
+    'Jeu : Qui a peur de l\'IA ?',
+    'Jeu interactif : IA ou humain ?',
+    'Jeu de piste : Découvrir l\'IA en s\'amusant',
   ],
 };
 
@@ -291,7 +297,8 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
     'cafe-ia': 'cafe-ia',
     'atelier': 'atelier',
     'conference': 'conference',
-    'jeu': 'autre',
+    'visite': 'visite',
+    'cine-debat': 'cine-debat',
     'autre': 'autre',
   };
   

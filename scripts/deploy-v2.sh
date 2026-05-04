@@ -116,7 +116,8 @@ echo ""
 echo -e "${YELLOW}[4/5] Build et démarrage des containers Docker...${NC}"
 
 $SSH_CMD "cd ${REMOTE_DIR}/deploy && \
-    docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans"
+    docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans && \
+    docker compose -f docker-compose.prod.yml --env-file .env.prod restart caddy"
 
 echo -e "  ${GREEN}Containers démarrés${NC}"
 echo ""
@@ -127,10 +128,10 @@ echo ""
 
 echo -e "${YELLOW}[5/5] Vérification du déploiement...${NC}"
 
-# Attendre que le backend soit prêt
+# Attendre que le backend soit prêt (directement dans le container, sans passer par Caddy)
 echo -e "  Attente du backend..."
 for i in $(seq 1 30); do
-    if $SSH_CMD "wget -q --spider http://localhost:8080/api/health 2>/dev/null" 2>/dev/null; then
+    if $SSH_CMD "cd ${REMOTE_DIR}/deploy && docker compose -f docker-compose.prod.yml exec -T backend wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/api/health 2>/dev/null" 2>/dev/null; then
         echo -e "  ${GREEN}Backend OK${NC}"
         break
     fi

@@ -12,6 +12,13 @@ import { MAP_STYLES } from './MapStyleSelector';
 import { DOMTOMInset } from './DOMTOMInset';
 import { ZoomIn, ZoomOut, Home } from 'lucide-react';
 
+export interface MapBounds {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}
+
 interface MapViewProps {
   geojson: EventsGeoJSON;
   selectedEvent: Event | null;
@@ -20,6 +27,7 @@ interface MapViewProps {
   onHoverEvent: (event: Event | null) => void;
   onViewEventDetails?: (eventId: string) => void;
   onMapFlyToReady?: (flyTo: (lng: number, lat: number, zoom?: number) => void) => void;
+  onBoundsChange?: (bounds: MapBounds) => void;
 }
 
 export function MapView({
@@ -30,6 +38,7 @@ export function MapView({
   onHoverEvent,
   onViewEventDetails,
   onMapFlyToReady,
+  onBoundsChange,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
   const { viewport, onMove } = useMapViewport();
@@ -44,7 +53,7 @@ export function MapView({
   const currentStyleUrl = MAP_STYLES.find(s => s.id === 'liberty')?.url || MAP_STYLES[0].url;
 
   // Expose flyTo to parent via mapRef for smoother transitions
-  const smoothFlyTo = useCallback((lng: number, lat: number, zoom?: number) => {
+  const smoothFlyTo = useCallback((lng: number, lat: number, zoom?: number, padding?: { top: number; bottom: number; left: number; right: number }) => {
     const map = mapRef.current;
     if (map) {
       map.flyTo({
@@ -52,6 +61,7 @@ export function MapView({
         zoom: zoom ?? map.getZoom(),
         duration: 1200,
         essential: true,
+        ...(padding && { padding }),
       });
     }
   }, []);
@@ -74,22 +84,32 @@ export function MapView({
     if (map) {
       const b = map.getBounds();
       if (b) {
-        setBounds({
+        const newBounds = {
           west: b.getWest(),
           south: b.getSouth(),
           east: b.getEast(),
           north: b.getNorth(),
-        });
+        };
+        setBounds(newBounds);
+        onBoundsChange?.(newBounds);
       }
     }
-  }, []);
+  }, [onBoundsChange]);
 
   // Clustering
-  const { clusters, getClusterExpansionZoom } = useClusters(
+  const { clusters, duplicateIds, getClusterExpansionZoom } = useClusters(
     geojson,
     bounds,
     viewport.zoom
   );
+
+  // Formater une date ISO en "20 Mai"
+  const formatDateShort = (dateStr: string): string => {
+    if (!dateStr) return '';
+    const [, month, day] = dateStr.split('-');
+    const months = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+    return `${parseInt(day)} ${months[parseInt(month) - 1]}`;
+  };
 
   // Gestionnaire de clic sur cluster
   const handleClusterClick = useCallback(
@@ -106,18 +126,45 @@ export function MapView({
       if (!isCluster(feature)) {
         const event = feature.properties;
         onSelectEvent(event);
-        // Smooth fly to the event, offset slightly to center popup in view
+        // Padding pour garder le marqueur dans la zone safe :
+        // - top: search bar (~80px) + hauteur popup (~220px)
+        // - right: mini-map DOMTOMInset (~300px) sur desktop
+        // - bottom / left: marges confortables
+        const isMobile = window.innerWidth < 640;
         smoothFlyTo(
           feature.geometry.coordinates[0],
           feature.geometry.coordinates[1],
-          Math.max(viewport.zoom, 12)
+          Math.max(viewport.zoom, 12),
+          {
+            top: 300,
+            bottom: 80,
+            left: isMobile ? 20 : 420,  // sidebar sur desktop
+            right: isMobile ? 20 : 310, // DOMTOMInset sur desktop
+          }
         );
       }
     },
     [onSelectEvent, smoothFlyTo, viewport.zoom]
   );
 
-  // Position du popup with offset to avoid being hidden by top controls
+  // Ancre dynamique : choisit la direction d'ouverture du popup
+  // selon la position du marqueur à l'écran pour éviter les chevauchements
+  const popupAnchor = useMemo((): 'bottom' | 'top' | 'left' | 'right' => {
+    if (!selectedEvent || !mapRef.current) return 'bottom';
+    const map = mapRef.current;
+    const pos = map.project([selectedEvent.longitude, selectedEvent.latitude]);
+    const { clientWidth } = map.getContainer();
+    const isMobile = clientWidth < 640;
+
+    const topThreshold = isMobile ? 250 : 300;   // search bar + popup height
+    const rightThreshold = isMobile ? 60 : 330;  // DOMTOMInset width
+
+    if (pos.y < topThreshold) return 'top';
+    if (pos.x > clientWidth - rightThreshold) return 'right';
+    return 'bottom';
+  }, [selectedEvent, viewport]);
+
+  // Position du popup
   const popupCoordinates = useMemo(() => {
     if (!selectedEvent) return null;
     return {
@@ -180,6 +227,7 @@ export function MapView({
                 onClick={() => handleEventClick(feature)}
                 onMouseEnter={() => onHoverEvent(event)}
                 onMouseLeave={() => onHoverEvent(null)}
+                dateLabel={duplicateIds.has(event.id) ? formatDateShort(event.date) : undefined}
               />
             </Marker>
           );
@@ -190,7 +238,7 @@ export function MapView({
           <Popup
             longitude={popupCoordinates.longitude}
             latitude={popupCoordinates.latitude}
-            anchor="bottom"
+            anchor={popupAnchor}
             onClose={() => onSelectEvent(null)}
             closeButton={false}
             closeOnClick={false}

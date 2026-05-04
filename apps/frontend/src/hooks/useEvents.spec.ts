@@ -156,6 +156,51 @@ describe('useEvents', () => {
       expect(result.current.events[0].isDuringWeek).toBe(false);
     });
 
+    it('filtre par plage calendrier (un jour)', async () => {
+      const events = [
+        makeEvent({ id: 'a', date: '2026-05-10' }),
+        makeEvent({ id: 'b', date: '2026-05-20' }),
+      ];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.updateFilters({
+          dateFilter: 'custom',
+          dateFrom: '2026-05-20',
+          dateTo: '',
+        });
+      });
+
+      expect(result.current.events).toHaveLength(1);
+      expect(result.current.events[0].id).toBe('b');
+    });
+
+    it('filtre par plage calendrier (intervalle)', async () => {
+      const events = [
+        makeEvent({ id: 'a', date: '2026-05-10' }),
+        makeEvent({ id: 'b', date: '2026-05-18', endDate: '2026-05-19' }),
+        makeEvent({ id: 'c', date: '2026-06-01' }),
+      ];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.updateFilters({
+          dateFilter: 'custom',
+          dateFrom: '2026-05-15',
+          dateTo: '2026-05-25',
+        });
+      });
+
+      expect(result.current.events).toHaveLength(1);
+      expect(result.current.events[0].id).toBe('b');
+    });
+
     it('filtre par région via toggleRegion', async () => {
       const events = [
         makeEvent({ id: 'a', region: 'Île-de-France' }),

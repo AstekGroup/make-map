@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Event, EventType } from '@/types/event';
+import { Event, EventType, TargetAudience } from '@/types/event';
 import { useEvents } from '@/hooks';
-import { MapView } from '@/components/Map';
+import { MapView, MapBounds } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchOverlay } from '@/components/Map/SearchOverlay';
-import { Loader2, List, Home, Filter } from 'lucide-react';
+import { Loader2, List, Home, Filter, Wifi } from 'lucide-react';
 
 export interface MapViewHandle {
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -24,12 +24,14 @@ export function MapPage() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleAudience,
     stats,
   } = useEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
   const [mobileShowSidebar, setMobileShowSidebar] = useState(false);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const mapFlyToRef = useRef<((lng: number, lat: number, zoom?: number) => void) | null>(null);
 
   const handleViewDetails = (eventId: string) => {
@@ -103,20 +105,29 @@ export function MapPage() {
       />
 
       {/* Navigation Controls - masqués sur mobile (accessibles via bouton Filtres en bas) */}
-      <div className="absolute top-4 left-4 z-20 hidden sm:flex items-center gap-2">
-        <Link
-          to="/"
-          className="bg-white shadow-popup rounded-xl p-2.5 hover:bg-surface-beige transition-all border border-primary/5 group"
-          title="Retour à l'accueil"
-        >
-          <Home className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-        </Link>
+      <div className="absolute top-4 left-4 z-20 hidden sm:flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Link
+            to="/"
+            className="bg-white shadow-popup rounded-xl p-2.5 hover:bg-surface-beige transition-all border border-primary/5 group"
+            title="Retour à l'accueil"
+          >
+            <Home className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+          </Link>
+          <button
+            onClick={() => navigate('/evenements')}
+            className="bg-white shadow-popup rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold text-primary hover:bg-surface-beige transition-all border border-primary/5 group"
+          >
+            <List className="w-4 h-4 group-hover:scale-110 transition-transform text-accent-magenta" />
+            Voir la liste
+          </button>
+        </div>
         <button
-          onClick={() => navigate('/evenements')}
+          onClick={() => navigate('/evenements?modality=distanciel')}
           className="bg-white shadow-popup rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold text-primary hover:bg-surface-beige transition-all border border-primary/5 group"
         >
-          <List className="w-4 h-4 group-hover:scale-110 transition-transform text-accent-magenta" />
-          Voir la liste
+          <Wifi className="w-4 h-4 group-hover:scale-110 transition-transform text-accent-coral" />
+          Événements en ligne
         </button>
       </div>
 
@@ -129,6 +140,7 @@ export function MapPage() {
         onHoverEvent={setHoveredEvent}
         onViewEventDetails={handleViewDetails}
         onMapFlyToReady={(flyToFn) => { mapFlyToRef.current = flyToFn; }}
+        onBoundsChange={setMapBounds}
       />
 
       {/* Sidebar - visible sur desktop, toggle sur mobile */}
@@ -139,12 +151,14 @@ export function MapPage() {
           onUpdateFilters={updateFilters}
           onToggleRegion={toggleRegion}
           onToggleType={(type) => toggleType(type as EventType)}
+          onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
           onResetFilters={resetFilters}
           selectedEvent={selectedEvent}
           onSelectEvent={handleSidebarEventClick}
           hoveredEvent={hoveredEvent}
           onHoverEvent={setHoveredEvent}
           stats={stats}
+          mapBounds={mapBounds}
         />
       </div>
 
@@ -157,6 +171,7 @@ export function MapPage() {
             onUpdateFilters={updateFilters}
             onToggleRegion={toggleRegion}
             onToggleType={(type) => toggleType(type as EventType)}
+          onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
             onResetFilters={resetFilters}
             selectedEvent={selectedEvent}
             onSelectEvent={(event) => {
@@ -166,6 +181,7 @@ export function MapPage() {
             hoveredEvent={hoveredEvent}
             onHoverEvent={setHoveredEvent}
             stats={stats}
+            mapBounds={mapBounds}
           />
         </div>
       )}

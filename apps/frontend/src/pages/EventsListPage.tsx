@@ -1,15 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { EventType } from '@/types/event';
-import { useEvents } from '@/hooks';
+import { EventType, TargetAudience } from '@/types/event';
+import { useEvents, type EventFilters } from '@/hooks';
 import { EventListView, EventFiltersBar } from '@/components/Events';
 import { Loader2, Home, Map } from 'lucide-react';
 
 export function EventsListPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const initialModality = searchParams.get('modality') as any;
-  
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const {
     events,
     loading,
@@ -19,15 +18,53 @@ export function EventsListPage() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleAudience,
     stats,
   } = useEvents();
 
-  // Initialisation de la modalité depuis l'URL si présente
+  const searchParamsKey = searchParams.toString();
+
+  // Recherche `?q=` + modalité `?modality=` ↔ état (retour navigateur, liens partageables)
   useEffect(() => {
-    if (initialModality && ['presentiel', 'distanciel', 'all'].includes(initialModality)) {
-      updateFilters({ modality: initialModality });
-    }
-  }, []); // Exécuté une seule fois au montage
+    const params = new URLSearchParams(searchParamsKey);
+    const q = params.get('q') ?? '';
+    const modRaw = params.get('modality');
+    const modality: EventFilters['modality'] =
+      modRaw && ['presentiel', 'distanciel', 'all'].includes(modRaw)
+        ? (modRaw as EventFilters['modality'])
+        : 'all';
+    updateFilters({ search: q, modality });
+  }, [searchParamsKey, updateFilters]);
+
+  const handleUpdateFilters = useCallback(
+    (partial: Partial<EventFilters>) => {
+      updateFilters(partial);
+      const touchesUrl =
+        partial.search !== undefined || partial.modality !== undefined;
+      if (!touchesUrl) return;
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (partial.search !== undefined) {
+            if (partial.search) next.set('q', partial.search);
+            else next.delete('q');
+          }
+          if (partial.modality !== undefined) {
+            if (partial.modality === 'all') next.delete('modality');
+            else next.set('modality', partial.modality);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [updateFilters, setSearchParams],
+  );
+
+  const handleResetFilters = useCallback(() => {
+    resetFilters();
+    setSearchParams(new URLSearchParams(), { replace: true });
+  }, [resetFilters, setSearchParams]);
 
   const isOnlineMode = filters.modality === 'distanciel';
   const pageTitle = isOnlineMode ? 'Les événements en ligne' : 'Assister aux événements';
@@ -94,10 +131,11 @@ export function EventsListPage() {
       {/* Filters bar with integrated Search and Modality Switcher */}
       <EventFiltersBar
         filters={filters}
-        onUpdateFilters={updateFilters}
+        onUpdateFilters={handleUpdateFilters}
         onToggleRegion={toggleRegion}
         onToggleType={(type) => toggleType(type as EventType)}
-        onResetFilters={resetFilters}
+        onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
+        onResetFilters={handleResetFilters}
       />
       
       {/* Event list grid with pagination */}

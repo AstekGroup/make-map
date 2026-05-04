@@ -1,4 +1,21 @@
-export type EventType = 'cafe-ia' | 'atelier' | 'conference' | 'jeu' | 'autre';
+/** Types d’événement affichés en tag / filtres (alignés Semaine de l’IA — plus de « Jeu »). */
+export type EventType =
+  | 'cafe-ia'
+  | 'atelier'
+  | 'conference'
+  | 'visite'
+  | 'cine-debat'
+  | 'autre';
+
+/** Ordre des cases à cocher filtres et clés de `stats.byType`. */
+export const EVENT_TYPES_ALL: EventType[] = [
+  'cafe-ia',
+  'atelier',
+  'conference',
+  'visite',
+  'cine-debat',
+  'autre',
+];
 
 export type EventFormat = 
   | 'debat' 
@@ -96,10 +113,11 @@ export function isCluster(feature: MapFeature): feature is ClusterFeature {
 }
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
-  'cafe-ia': 'Café IA',
-  'atelier': 'Atelier',
+  'cafe-ia': 'Café IA / Atelier',
+  'atelier': 'Formation',
   'conference': 'Conférence',
-  'jeu': 'Jeu',
+  'visite': 'Visite guidée / Portes ouvertes',
+  'cine-debat': 'Ciné-débat / Exposition / Festival',
   'autre': 'Autre',
 };
 
@@ -107,18 +125,19 @@ export const EVENT_TYPE_COLORS: Record<EventType, string> = {
   'cafe-ia': '#f56476',
   'atelier': '#003081',
   'conference': '#cc3366',
-  'jeu': '#ffb347',
+  'visite': '#0d9488',
+  'cine-debat': '#9333ea',
   'autre': '#69727d',
 };
 
 export const EVENT_FORMAT_LABELS: Record<EventFormat, string> = {
   'debat': 'Débat',
-  'atelier': 'Atelier',
+  'atelier': 'Formation',
   'prise-en-main': 'Prise en main d\'outil',
   'conference': 'Conférence/Table-ronde',
-  'visite': 'Visite guidée/Portes ouvertes',
-  'cafe-ia': 'Café IA',
-  'cine-debat': 'Ciné-débat/Exposition/Festival',
+  'visite': 'Visite guidée / Portes ouvertes',
+  'cafe-ia': 'Café IA / Atelier',
+  'cine-debat': 'Ciné-débat / Exposition / Festival',
   'formation': 'Formation',
   'autre': 'Autre',
 };

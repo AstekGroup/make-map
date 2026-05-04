@@ -2,6 +2,43 @@ import { useMemo, useCallback } from 'react';
 import Supercluster from 'supercluster';
 import { EventsGeoJSON, GeoJSONEvent, ClusterFeature, MapFeature } from '@/types/event';
 
+// Décale légèrement les événements ayant exactement les mêmes coordonnées
+// pour qu'ils restent cliquables individuellement au zoom max.
+// Retourne aussi un Set des IDs concernés (pour afficher une bulle de date).
+function jitterDuplicateCoordinates(features: GeoJSONEvent[]): {
+  jittered: GeoJSONEvent[];
+  duplicateIds: Set<string>;
+} {
+  const groups = new Map<string, GeoJSONEvent[]>();
+  for (const f of features) {
+    const key = `${f.geometry.coordinates[0]},${f.geometry.coordinates[1]}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(f);
+  }
+  const jittered: GeoJSONEvent[] = [];
+  const duplicateIds = new Set<string>();
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      jittered.push(group[0]);
+    } else {
+      const radius = 0.00008; // ~8m — imperceptible sur la carte
+      group.forEach((f, i) => {
+        duplicateIds.add(f.properties.id);
+        const angle = (2 * Math.PI * i) / group.length;
+        const [lng, lat] = f.geometry.coordinates;
+        jittered.push({
+          ...f,
+          geometry: {
+            ...f.geometry,
+            coordinates: [lng + radius * Math.cos(angle), lat + radius * Math.sin(angle)],
+          },
+        });
+      });
+    }
+  }
+  return { jittered, duplicateIds };
+}
+
 interface BoundingBox {
   west: number;
   south: number;
@@ -23,19 +60,22 @@ export function useClusters(
 ) {
   const { radius = 75, maxZoom = 16, minZoom = 0 } = options;
 
-  // Créer l'instance Supercluster
-  const supercluster = useMemo(() => {
+  // Créer l'instance Supercluster + calculer les IDs en doublon
+  const { supercluster, duplicateIds } = useMemo(() => {
     const index = new Supercluster<GeoJSONEvent['properties'], ClusterFeature['properties']>({
       radius,
       maxZoom,
       minZoom,
     });
 
+    let ids = new Set<string>();
     if (geojson.features.length > 0) {
-      index.load(geojson.features);
+      const { jittered, duplicateIds: dupes } = jitterDuplicateCoordinates(geojson.features);
+      index.load(jittered);
+      ids = dupes;
     }
 
-    return index;
+    return { supercluster: index, duplicateIds: ids };
   }, [geojson, radius, maxZoom, minZoom]);
 
   // Obtenir les clusters pour la vue actuelle
@@ -101,6 +141,7 @@ export function useClusters(
   return {
     clusters,
     supercluster,
+    duplicateIds,
     getClusterChildren,
     getClusterExpansionZoom,
     clusterStats,
