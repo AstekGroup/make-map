@@ -8,7 +8,6 @@ import { Loader2, Home, Map } from 'lucide-react';
 export function EventsListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialModality = searchParams.get('modality') as string | null;
 
   const {
     events,
@@ -25,26 +24,39 @@ export function EventsListPage() {
 
   const searchParamsKey = searchParams.toString();
 
-  // Recherche textuelle ↔ `?q=` (retour navigateur / lien partageable)
+  // Recherche `?q=` + modalité `?modality=` ↔ état (retour navigateur, liens partageables)
   useEffect(() => {
-    const q = new URLSearchParams(searchParamsKey).get('q') ?? '';
-    updateFilters({ search: q });
+    const params = new URLSearchParams(searchParamsKey);
+    const q = params.get('q') ?? '';
+    const modRaw = params.get('modality');
+    const modality: EventFilters['modality'] =
+      modRaw && ['presentiel', 'distanciel', 'all'].includes(modRaw)
+        ? (modRaw as EventFilters['modality'])
+        : 'all';
+    updateFilters({ search: q, modality });
   }, [searchParamsKey, updateFilters]);
 
   const handleUpdateFilters = useCallback(
     (partial: Partial<EventFilters>) => {
       updateFilters(partial);
-      if (partial.search !== undefined) {
-        setSearchParams(
-          (prev) => {
-            const next = new URLSearchParams(prev);
+      const touchesUrl =
+        partial.search !== undefined || partial.modality !== undefined;
+      if (!touchesUrl) return;
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (partial.search !== undefined) {
             if (partial.search) next.set('q', partial.search);
             else next.delete('q');
-            return next;
-          },
-          { replace: true },
-        );
-      }
+          }
+          if (partial.modality !== undefined) {
+            if (partial.modality === 'all') next.delete('modality');
+            else next.set('modality', partial.modality);
+          }
+          return next;
+        },
+        { replace: true },
+      );
     },
     [updateFilters, setSearchParams],
   );
@@ -53,13 +65,6 @@ export function EventsListPage() {
     resetFilters();
     setSearchParams(new URLSearchParams(), { replace: true });
   }, [resetFilters, setSearchParams]);
-
-  // Initialisation de la modalité depuis l'URL si présente
-  useEffect(() => {
-    if (initialModality && ['presentiel', 'distanciel', 'all'].includes(initialModality)) {
-      updateFilters({ modality: initialModality as EventFilters['modality'] });
-    }
-  }, []); // Exécuté une seule fois au montage
 
   const isOnlineMode = filters.modality === 'distanciel';
   const pageTitle = isOnlineMode ? 'Les événements en ligne' : 'Assister aux événements';
