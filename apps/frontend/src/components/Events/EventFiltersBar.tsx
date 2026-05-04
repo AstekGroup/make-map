@@ -1,6 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { EventFilters } from '@/hooks';
-import { EventType, TargetAudience, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, TARGET_AUDIENCE_LABELS, REGIONS } from '@/types/event';
+import {
+  EventType,
+  TargetAudience,
+  EVENT_TYPE_LABELS,
+  EVENT_TYPE_COLORS,
+  TARGET_AUDIENCE_LABELS,
+  REGIONS,
+  EVENT_TYPES_ALL,
+} from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, History } from 'lucide-react';
 
@@ -13,7 +21,7 @@ interface EventFiltersBarProps {
   onResetFilters: () => void;
 }
 
-const EVENT_TYPES: EventType[] = ['cafe-ia', 'atelier', 'conference', 'jeu', 'autre'];
+const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
 const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'qpv', 'scolaire', 'handicap', 'salaries', 'adherents'];
 
 interface FilterDropdownProps {

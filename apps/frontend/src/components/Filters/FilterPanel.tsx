@@ -1,5 +1,13 @@
 import { EventFilters } from '@/hooks';
-import { EventType, TargetAudience, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, TARGET_AUDIENCE_LABELS, REGIONS } from '@/types/event';
+import {
+  EventType,
+  TargetAudience,
+  EVENT_TYPE_LABELS,
+  EVENT_TYPE_COLORS,
+  TARGET_AUDIENCE_LABELS,
+  REGIONS,
+  EVENT_TYPES_ALL,
+} from '@/types/event';
 import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, Users, History } from 'lucide-react';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
@@ -19,7 +27,7 @@ interface FilterPanelProps {
   };
 }
 
-const EVENT_TYPES: EventType[] = ['cafe-ia', 'atelier', 'conference', 'jeu', 'autre'];
+const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
 const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'qpv', 'scolaire', 'handicap', 'salaries', 'adherents'];
 
 export function FilterPanel({

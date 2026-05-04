@@ -35,6 +35,24 @@ describe('mapFormat', () => {
   it('mappe Formation / Sensibilisation correctement', () => {
     expect(mapFormat('Formation / Sensibilisation')).toEqual({ format: 'formation', type: 'atelier' });
   });
+
+  it('mappe Jeu / Hackathon vers autre (plus de type jeu)', () => {
+    expect(mapFormat('Jeu / Hackathon')).toEqual({ format: 'autre', type: 'autre' });
+  });
+
+  it('mappe Visite guidée / Portes ouvertes vers type visite', () => {
+    expect(mapFormat('Visite guidée / Portes ouvertes')).toEqual({
+      format: 'visite',
+      type: 'visite',
+    });
+  });
+
+  it('mappe Ciné-débat / Exposition / Festival vers type cine-debat', () => {
+    expect(mapFormat('Ciné-débat / Exposition / Festival')).toEqual({
+      format: 'cine-debat',
+      type: 'cine-debat',
+    });
+  });
 });
 
 describe('mapTargetAudience', () => {

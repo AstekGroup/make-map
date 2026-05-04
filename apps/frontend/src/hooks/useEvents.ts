@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Event, EventType, TargetAudience, EventsGeoJSON } from '@/types/event';
+import { Event, EventType, TargetAudience, EventsGeoJSON, EVENT_TYPES_ALL } from '@/types/event';
 import { fetchEvents, eventsToGeoJSON } from '@/services/api';
 
 export interface EventFilters {
@@ -158,7 +158,7 @@ export function useEvents() {
     filtered: filteredEvents.length,
     duringWeek: events.filter(e => e.isDuringWeek).length,
     byType: Object.fromEntries(
-      (['cafe-ia', 'atelier', 'conference', 'jeu', 'autre'] as EventType[]).map(type => [
+      EVENT_TYPES_ALL.map(type => [
         type,
         filteredEvents.filter(e => e.type === type).length,
       ])

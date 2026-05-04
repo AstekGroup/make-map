@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { MapPin, Coffee, Wrench, Mic2, Gamepad2, HelpCircle } from 'lucide-react';
+import { MapPin, Coffee, Wrench, Mic2, HelpCircle, DoorOpen, Clapperboard } from 'lucide-react';
 import { EventType, EVENT_TYPE_COLORS } from '@/types/event';
 
 interface EventMarkerProps {
@@ -16,7 +16,8 @@ export const TYPE_ICONS: Record<EventType, typeof MapPin> = {
   'cafe-ia': Coffee,
   'atelier': Wrench,
   'conference': Mic2,
-  'jeu': Gamepad2,
+  'visite': DoorOpen,
+  'cine-debat': Clapperboard,
   'autre': HelpCircle,
 };
 
